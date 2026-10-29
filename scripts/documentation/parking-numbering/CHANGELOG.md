@@ -13,7 +13,7 @@ and this tool follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 - **Sequential numbering without gap consumption:** When existing spaces are skipped, sequential number allocation is not advanced; newly numbered spaces start strictly from the configured starting number (e.g. `01`).
 - **Angled bay label association:** Associates existing numbering notes via proximity to each stall center (3.5 ft radius), eliminating false-positive overlaps caused by axis-aligned bounding boxes on adjacent angled stalls.
-- **Geometric center placement:** Centers the number using transformed bounding-box corners (with safe fallbacks), improving placement for rotated/oriented parking spaces and varying dimensions.
+- **Geometric center placement across orientations:** Centers numbers using local family geometry and instance transforms (`GetTransform()`), accurately computing physical centers for stalls facing North, West, South, East, or diagonal angles, even when the family insertion origin is at the curb/baseline edge.
 - **Safe renumbering mode:** Added an explicit renumbering toggle (`IN[1]`). When `True`, existing numbering notes are updated in-place starting from the chosen start number without creating duplicate notes. When `False` (safe mode), stalls with existing numbering notes are preserved.
 - **Protection of unrelated annotations:** Unrelated descriptive text (e.g. "RESERVED", "EV ONLY") is never matched as a parking label and is never modified, overwritten, or deleted.
 

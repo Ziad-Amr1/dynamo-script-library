@@ -101,15 +101,217 @@ def get_bbox_corners(bbox):
     return corners
 
 
+def _extract_geometry_points(geom_container, pts):
+    """Recursively collect 3D XYZ points from a Revit GeometryElement or container."""
+    if geom_container is None:
+        return
+    try:
+        for obj in geom_container:
+            if obj is None:
+                continue
+            if hasattr(obj, "GetSymbolGeometry"):
+                sym_geom = obj.GetSymbolGeometry()
+                if sym_geom is not None:
+                    _extract_geometry_points(sym_geom, pts)
+                else:
+                    inst_geom = getattr(obj, "GetInstanceGeometry", lambda: None)()
+                    if inst_geom is not None:
+                        _extract_geometry_points(inst_geom, pts)
+            elif hasattr(obj, "GetEndPoint"):
+                pts.append(obj.GetEndPoint(0))
+                pts.append(obj.GetEndPoint(1))
+            elif hasattr(obj, "GetCoordinates"):
+                for coord in obj.GetCoordinates():
+                    pts.append(coord)
+            elif hasattr(obj, "Edges"):
+                for edge in obj.Edges:
+                    pts.append(edge.Evaluate(0.0))
+                    pts.append(edge.Evaluate(1.0))
+            elif hasattr(obj, "Vertices"):
+                for v in obj.Vertices:
+                    pts.append(v)
+    except Exception:
+        pass
+
+
+def get_center_from_geometry(element, active_view=None):
+    """Calculate the exact physical center using local family geometry and instance transform.
+    
+    Extracts unrotated symbol geometry in the family's local coordinate space,
+    computes the local bounding box midpoint, and maps it to model space via
+    element.GetTransform(). This correctly centers stalls facing North, West,
+    East, South, or diagonal angles, even when the family insertion origin
+    is anchored at the curb/baseline edge.
+    """
+    if not hasattr(element, "GetTransform"):
+        return None
+
+    try:
+        transform = element.GetTransform()
+        if transform is None:
+            return None
+
+        # Build geometry options if Revit API Options is available
+        geom_elem = None
+        if "Options" in globals():
+            options = Options()
+            if active_view is not None:
+                options.View = active_view
+            options.ComputeReferences = False
+            options.IncludeNonVisibleObjects = False
+            try:
+                geom_elem = element.get_Geometry(options)
+            except Exception:
+                geom_elem = None
+            if geom_elem is None and active_view is not None:
+                try:
+                    options.View = None
+                    geom_elem = element.get_Geometry(options)
+                except Exception:
+                    geom_elem = None
+        else:
+            try:
+                geom_elem = element.get_Geometry(None)
+            except Exception:
+                geom_elem = None
+
+        if geom_elem is None:
+            return None
+
+        local_pts = []
+        world_pts = []
+
+        for obj in geom_elem:
+            if hasattr(obj, "GetSymbolGeometry"):
+                sym = obj.GetSymbolGeometry()
+                if sym is not None:
+                    _extract_geometry_points(sym, local_pts)
+                inst = getattr(obj, "GetInstanceGeometry", lambda: None)()
+                if inst is not None:
+                    _extract_geometry_points(inst, world_pts)
+            else:
+                _extract_geometry_points([obj], world_pts)
+
+        # 1. Local symbol points mapped through instance transform
+        if local_pts:
+            min_x = min(p.X for p in local_pts)
+            max_x = max(p.X for p in local_pts)
+            min_y = min(p.Y for p in local_pts)
+            max_y = max(p.Y for p in local_pts)
+            min_z = min(p.Z for p in local_pts)
+            max_z = max(p.Z for p in local_pts)
+            xyz_type = globals().get("XYZ", type(local_pts[0]))
+            local_center = xyz_type(
+                (min_x + max_x) / 2.0,
+                (min_y + max_y) / 2.0,
+                (min_z + max_z) / 2.0
+            )
+            return transform.OfPoint(local_center)
+
+        # 2. World points transformed into local unrotated space via inverse transform
+        if world_pts:
+            try:
+                inv = getattr(transform, "Inverse", None)
+                if inv is not None:
+                    local_mapped = [inv.OfPoint(p) for p in world_pts]
+                    min_x = min(p.X for p in local_mapped)
+                    max_x = max(p.X for p in local_mapped)
+                    min_y = min(p.Y for p in local_mapped)
+                    max_y = max(p.Y for p in local_mapped)
+                    min_z = min(p.Z for p in local_mapped)
+                    max_z = max(p.Z for p in local_mapped)
+                    xyz_type = globals().get("XYZ", type(world_pts[0]))
+                    local_center = xyz_type(
+                        (min_x + max_x) / 2.0,
+                        (min_y + max_y) / 2.0,
+                        (min_z + max_z) / 2.0
+                    )
+                    return transform.OfPoint(local_center)
+            except Exception:
+                pass
+
+            min_x = min(p.X for p in world_pts)
+            max_x = max(p.X for p in world_pts)
+            min_y = min(p.Y for p in world_pts)
+            max_y = max(p.Y for p in world_pts)
+            min_z = min(p.Z for p in world_pts)
+            max_z = max(p.Z for p in world_pts)
+            xyz_type = globals().get("XYZ", type(world_pts[0]))
+            return xyz_type(
+                (min_x + max_x) / 2.0,
+                (min_y + max_y) / 2.0,
+                (min_z + max_z) / 2.0
+            )
+
+    except Exception:
+        pass
+
+    return None
+
+
+def get_center_from_parameters(element):
+    """Estimate stall center using FacingOrientation and length/depth parameters when geometry is unavailable."""
+    try:
+        loc = getattr(element, "Location", None)
+        origin = getattr(loc, "Point", None)
+        if origin is None:
+            return None
+
+        # Look up stall length/depth parameter
+        length_val = None
+        for param_name in ("Length", "Stall Length", "Parking Length", "Depth", "Stall Depth"):
+            p = None
+            if hasattr(element, "LookupParameter"):
+                p = element.LookupParameter(param_name)
+            if p is None and hasattr(element, "Symbol") and element.Symbol is not None:
+                p = element.Symbol.LookupParameter(param_name)
+            if p is not None and getattr(p, "HasValue", False):
+                length_val = p.AsDouble()
+                if length_val and length_val > 0:
+                    break
+
+        if length_val and length_val > 0:
+            facing = getattr(element, "FacingOrientation", None)
+            if facing is not None:
+                # Family origin is at curb (baseline). Center is offset by length / 2 along FacingOrientation.
+                half_len = length_val / 2.0
+                xyz_type = globals().get("XYZ", type(origin))
+                return xyz_type(
+                    origin.X + facing.X * half_len,
+                    origin.Y + facing.Y * half_len,
+                    origin.Z + facing.Z * half_len
+                )
+    except Exception:
+        pass
+    return None
+
+
 def get_center(element):
     """Get the geometric center of the element with safe fallbacks."""
-    bbox = element.get_BoundingBox(view)
+    active_view = globals().get("view", None)
 
-    if bbox is None:
+    # 1. Primary: True physical center from local unrotated symbol geometry via GetTransform()
+    geom_center = get_center_from_geometry(element, active_view)
+    if geom_center is not None:
+        return geom_center
+
+    # 2. Parameter-based orientation offset (FacingOrientation * Length / 2)
+    param_center = get_center_from_parameters(element)
+    if param_center is not None:
+        return param_center
+
+    # 3. View / model bounding box transformed to model space
+    bbox = None
+    if hasattr(element, "get_BoundingBox"):
         try:
-            bbox = element.get_BoundingBox(None)
+            bbox = element.get_BoundingBox(active_view)
         except Exception:
             bbox = None
+        if bbox is None:
+            try:
+                bbox = element.get_BoundingBox(None)
+            except Exception:
+                bbox = None
 
     if bbox is not None:
         corners = get_bbox_corners(bbox)
@@ -117,9 +319,10 @@ def get_center(element):
             center_x = sum(p.X for p in corners) / float(len(corners))
             center_y = sum(p.Y for p in corners) / float(len(corners))
             center_z = sum(p.Z for p in corners) / float(len(corners))
-            return XYZ(center_x, center_y, center_z)
+            xyz_type = globals().get("XYZ", type(corners[0]))
+            return xyz_type(center_x, center_y, center_z)
 
-    # Fallback to LocationPoint if bounding box is unavailable
+    # 4. Fallback to LocationPoint if bounding box is unavailable
     try:
         loc = element.Location
         if hasattr(loc, "Point"):

@@ -488,6 +488,149 @@ class ParkingNumberingTests(unittest.TestCase):
         self.assertLess(dist_self, 3.5)
         self.assertGreater(dist_adjacent, 3.5)
 
+    def test_geometric_center_all_orientations_with_symbol_geometry(self) -> None:
+        """Verify accurate physical center for stalls facing North, West, South, East, and diagonal."""
+        import math
+
+        class MockXYZ:
+            def __init__(self, x: float, y: float, z: float = 0.0) -> None:
+                self.X = float(x)
+                self.Y = float(y)
+                self.Z = float(z)
+
+            def __repr__(self) -> str:
+                return f"XYZ({self.X:.3f}, {self.Y:.3f}, {self.Z:.3f})"
+
+        class MockTransform:
+            def __init__(self, origin: MockXYZ, angle_rad: float) -> None:
+                self.Origin = origin
+                self.angle = angle_rad
+                self.BasisX = MockXYZ(math.cos(angle_rad), math.sin(angle_rad), 0.0)
+                self.BasisY = MockXYZ(-math.sin(angle_rad), math.cos(angle_rad), 0.0)
+                self.BasisZ = MockXYZ(0.0, 0.0, 1.0)
+
+            def OfPoint(self, p: MockXYZ) -> MockXYZ:
+                rx = p.X * self.BasisX.X + p.Y * self.BasisY.X
+                ry = p.X * self.BasisX.Y + p.Y * self.BasisY.Y
+                return MockXYZ(self.Origin.X + rx, self.Origin.Y + ry, self.Origin.Z + p.Z)
+
+        class MockLine:
+            def __init__(self, p0: MockXYZ, p1: MockXYZ) -> None:
+                self.p0 = p0
+                self.p1 = p1
+
+            def GetEndPoint(self, i: int) -> MockXYZ:
+                return self.p0 if i == 0 else self.p1
+
+        class MockGeometryInstance:
+            def __init__(self, symbol_geom: list) -> None:
+                self.symbol_geom = symbol_geom
+
+            def GetSymbolGeometry(self) -> list:
+                return self.symbol_geom
+
+            def GetInstanceGeometry(self) -> None:
+                return None
+
+        class MockFamilyInstance:
+            def __init__(self, transform: MockTransform, local_lines: list) -> None:
+                self.transform = transform
+                self.geom = [MockGeometryInstance(local_lines)]
+                self.FacingOrientation = transform.BasisY
+                self.Location = type("MockLoc", (), {"Point": transform.Origin})()
+
+            def GetTransform(self) -> MockTransform:
+                return self.transform
+
+            def get_Geometry(self, options: None) -> list:
+                return self.geom
+
+        funcs = self._extract_script_functions()
+        funcs["XYZ"] = MockXYZ
+        get_center_geom = funcs["get_center_from_geometry"]
+
+        # Family definition: 2.4 m x 5.0 m stall. Insertion origin is at the curb edge (0, 0)
+        # Stall extends in X: [-1.2, 1.2], Y: [0, 5.0]. Local physical center is (0.0, 2.5, 0.0)
+        local_lines = [
+            MockLine(MockXYZ(-1.2, 0.0), MockXYZ(-1.2, 5.0)),
+            MockLine(MockXYZ(1.2, 0.0), MockXYZ(1.2, 5.0)),
+            MockLine(MockXYZ(-1.2, 0.0), MockXYZ(1.2, 0.0)),
+        ]
+
+        origin = MockXYZ(100.0, 200.0, 0.0)
+
+        # Expected centers for each orientation: origin + transform.OfPoint((0, 2.5, 0))
+        orientations = [
+            (0, "North", MockXYZ(100.0, 202.5, 0.0)),
+            (90, "West", MockXYZ(97.5, 200.0, 0.0)),
+            (180, "South", MockXYZ(100.0, 197.5, 0.0)),
+            (270, "East", MockXYZ(102.5, 200.0, 0.0)),
+            (45, "Diagonal_45", MockXYZ(100.0 - 2.5 * math.sin(math.radians(45)), 200.0 + 2.5 * math.cos(math.radians(45)), 0.0)),
+            (60, "Diagonal_60", MockXYZ(100.0 - 2.5 * math.sin(math.radians(60)), 200.0 + 2.5 * math.cos(math.radians(60)), 0.0)),
+        ]
+
+        for angle_deg, name, expected_center in orientations:
+            with self.subTest(orientation=name, angle=angle_deg):
+                tr = MockTransform(origin, math.radians(angle_deg))
+                elem = MockFamilyInstance(tr, local_lines)
+                computed = get_center_geom(elem)
+                self.assertIsNotNone(computed, f"Failed to calculate center for {name}")
+                self.assertAlmostEqual(computed.X, expected_center.X, places=4)
+                self.assertAlmostEqual(computed.Y, expected_center.Y, places=4)
+                self.assertAlmostEqual(computed.Z, expected_center.Z, places=4)
+
+    def test_parameter_orientation_offset_when_geometry_absent(self) -> None:
+        """Verify parameter-based center calculation (FacingOrientation * Length / 2)."""
+        import math
+
+        class MockXYZ:
+            def __init__(self, x: float, y: float, z: float = 0.0) -> None:
+                self.X = float(x)
+                self.Y = float(y)
+                self.Z = float(z)
+
+        class MockParameter:
+            def __init__(self, val: float) -> None:
+                self.val = val
+                self.HasValue = True
+
+            def AsDouble(self) -> float:
+                return self.val
+
+        class MockElementWithParam:
+            def __init__(self, origin: MockXYZ, facing: MockXYZ, length: float) -> None:
+                self.Location = type("MockLoc", (), {"Point": origin})()
+                self.FacingOrientation = facing
+                self.length = length
+
+            def LookupParameter(self, name: str):
+                if name in ("Length", "Stall Length"):
+                    return MockParameter(self.length)
+                return None
+
+        funcs = self._extract_script_functions()
+        funcs["XYZ"] = MockXYZ
+        get_param_center = funcs["get_center_from_parameters"]
+
+        origin = MockXYZ(50.0, 50.0, 0.0)
+        length = 16.404  # ~5.0 meters in feet
+
+        # Test North, West, South, East facing
+        facing_cases = [
+            ("North", MockXYZ(0.0, 1.0, 0.0), MockXYZ(50.0, 50.0 + length / 2.0, 0.0)),
+            ("West", MockXYZ(-1.0, 0.0, 0.0), MockXYZ(50.0 - length / 2.0, 50.0, 0.0)),
+            ("South", MockXYZ(0.0, -1.0, 0.0), MockXYZ(50.0, 50.0 - length / 2.0, 0.0)),
+            ("East", MockXYZ(1.0, 0.0, 0.0), MockXYZ(50.0 + length / 2.0, 50.0, 0.0)),
+        ]
+
+        for name, facing, expected in facing_cases:
+            with self.subTest(facing=name):
+                elem = MockElementWithParam(origin, facing, length)
+                computed = get_param_center(elem)
+                self.assertIsNotNone(computed)
+                self.assertAlmostEqual(computed.X, expected.X, places=4)
+                self.assertAlmostEqual(computed.Y, expected.Y, places=4)
+
 
 class LinkCheckerTests(unittest.TestCase):
     def test_reports_missing_relative_target(self) -> None:

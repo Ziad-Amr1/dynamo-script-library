@@ -212,7 +212,7 @@ summary and the error lists.
 | Rows are merged or split incorrectly | The 1 foot row tolerance does not match the layout | Adjust `ROW_TOLERANCE` in `script.py` and update the Python node in the graph. |
 | Duplicate numbers or duplicate notes | The graph was run more than once without cleanup | Undo the previous run or delete the old text notes, then run again. |
 | Text is too small or too large | The project text size differs from 150 mm | Change `TEXT_SIZE_MM` in `script.py` and update the graph's Python node. |
-| Notes appear away from the parking bay center | The family's bounding box is irregular | Check the family geometry; the script uses the bounding-box center, not the family origin. |
+| Notes appear away from the parking bay center | The family's geometry or insertion point is non-standard | The script evaluates unrotated family geometry via `GetTransform()` and parameter offsets to accurately center notes across all stall orientations (North, West, South, East, diagonal). |
 | `NameError` or `IN[1]` errors | The old script or old graph is being used | Use the maintained files: `IN[0]` is the only input. |
 | `SyntaxError` or `.NET` errors | The Python node uses IronPython 2.7 | Switch the node to **CPython 3**. |
 | Every item is in the error list | The active view or default text note type cannot create annotations | Try a plan view, confirm a default text note type exists, and read the `Error` text. |
@@ -227,7 +227,7 @@ Revit and Dynamo versions when reporting the problem.
 See [CHANGELOG.md](CHANGELOG.md).
 
 | Version | Date | Summary |
-| `0.1.1` | 2026-10-29 | Geometry-based centering (transformed bbox corners), non-destructive handling of existing text notes, updated outputs/summary. |
+| `0.1.1` | 2026-10-29 | Physical centering across orientations (North, West, South, East, diagonal), non-destructive handling of existing text notes, sequential numbering, safe renumbering mode. |
 | `0.1.0` | 2026-10-29 | First repository import. Removes the unused Boolean, exposes the start number as `IN[0]`, and adds package documentation. |
 
 ## License
