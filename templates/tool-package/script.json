@@ -1,0 +1,16 @@
+{
+  "name": "{{name}}",
+  "id": "{{id}}",
+  "description": "{{description}}",
+  "category": "{{category}}",
+  "version": "{{version}}",
+  "status": "development",
+  "revit_versions": [],
+  "dynamo_versions": [],
+  "python_engine": "{{python_engine}}",
+  "entry_points": [
+    "script.py"
+  ],
+  "dependencies": [],
+  "tags": []
+}

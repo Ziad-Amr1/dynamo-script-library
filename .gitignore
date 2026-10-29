@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+env/
+
+# Build output
+dist/
+build/
+*.zip
+
+# Dynamo / Revit local state
+**/backup/
+**/*.dyn.bak
+**/*.rvt
+**/*.rfa
+**/*.rte
+**/*.log
+**/journal*.txt
+
+# IDE and OS files
+.vscode/
+.idea/
+*.code-workspace
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Local secrets and machine-specific files
+.env
+.env.*
+*.local

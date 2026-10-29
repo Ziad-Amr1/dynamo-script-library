@@ -1,0 +1,35 @@
+# Repository catalog configuration.
+# Consumed by tools/generate_catalog.py and tools/validate_manifests.py.
+# Keep this file in sync when adding or renaming a category folder.
+version: 1
+readme: README.md
+tools_dir: scripts
+catalog_start: "<!-- BEGIN GENERATED: TOOLS -->"
+catalog_end: "<!-- END GENERATED: TOOLS -->"
+status_labels:
+  stable: Stable
+  beta: Beta
+  development: Development
+  deprecated: Deprecated
+categories:
+  - id: model-management
+    name: Model Management
+    description: Auditing, cleanup, and batch operations on Revit models and links.
+  - id: sheets-and-views
+    name: Sheets & Views
+    description: Creating, organizing, numbering, and exporting sheets and views.
+  - id: parameters
+    name: Parameters
+    description: Reading, writing, validating, and transferring parameter data.
+  - id: families
+    name: Families
+    description: Loading, auditing, placing, and managing Revit families.
+  - id: geometry
+    name: Geometry
+    description: Geometry analysis, transformation, and interoperability helpers.
+  - id: documentation
+    name: Documentation
+    description: Schedules, exports, reports, and project documentation workflows.
+  - id: utilities
+    name: Utilities
+    description: General-purpose helpers for lists, text, files, and data cleanup.

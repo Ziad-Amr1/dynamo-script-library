@@ -1,0 +1,16 @@
+# Normalize text files to LF so generated documentation and ZIP hashes are stable.
+* text=auto eol=lf
+
+# Revit and image binaries
+*.rvt binary
+*.rfa binary
+*.rte binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.zip binary
+
+# Dynamo graphs are JSON text and benefit from readable diffs.
+*.dyn text eol=lf
