@@ -1,0 +1,76 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Validate SemVer tag
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          if ! printf '%s' "$TAG" | grep -Eq '^v(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z.-]+)?$'; then
+            echo "::error::Tag '$TAG' is not a valid SemVer tag such as v1.2.3."
+            exit 1
+          fi
+
+      - name: Require release notes
+        run: |
+          NOTES="docs/releases/${GITHUB_REF_NAME}.md"
+          if [ ! -f "$NOTES" ]; then
+            echo "::error::Missing $NOTES. Write release notes before tagging."
+            exit 1
+          fi
+
+      - name: Run tests and validation
+        run: |
+          python -m unittest discover -s tests -v
+          python tools/validate_manifests.py
+          python tools/check_links.py
+          python tools/generate_catalog.py --check
+
+      - name: Build release packages
+        run: python tools/package_tools.py --out dist
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          TAG="${GITHUB_REF_NAME}"
+          NOTES="docs/releases/${TAG}.md"
+          ASSETS="dist/*.zip dist/index.json dist/SHA256SUMS.txt"
+          PRERELEASE=""
+          case "$TAG" in
+            *-*) PRERELEASE="--prerelease" ;;
+          esac
+
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release edit "$TAG" \
+              --title "Dynamo Script Library ${TAG}" \
+              --notes-file "$NOTES" \
+              $PRERELEASE
+            gh release upload "$TAG" $ASSETS --clobber
+          else
+            gh release create "$TAG" $ASSETS \
+              --title "Dynamo Script Library ${TAG}" \
+              --notes-file "$NOTES" \
+              $PRERELEASE \
+              --verify-tag
+          fi

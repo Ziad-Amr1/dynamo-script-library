@@ -1,0 +1,41 @@
+name: Build packages
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Validate and test
+        run: |
+          python -m unittest discover -s tests -v
+          python tools/validate_manifests.py
+          python tools/check_links.py
+          python tools/generate_catalog.py --check
+
+      - name: Build tool packages
+        run: python tools/package_tools.py --out dist
+
+      - name: Upload packages
+        uses: actions/upload-artifact@v4
+        with:
+          name: tool-packages
+          path: |
+            dist/*.zip
+            dist/index.json
+            dist/SHA256SUMS.txt
+          if-no-files-found: error
+          retention-days: 14

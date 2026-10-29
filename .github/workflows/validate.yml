@@ -1,0 +1,40 @@
+name: Validate
+
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: validate-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Run tests
+        run: python -m unittest discover -s tests -v
+
+      - name: Validate manifests
+        run: python tools/validate_manifests.py
+
+      - name: Check relative documentation links
+        run: python tools/check_links.py
+
+      - name: Check generated catalog is current
+        run: python tools/generate_catalog.py --check
+
+      - name: Build packages (smoke test)
+        run: python tools/package_tools.py --out dist

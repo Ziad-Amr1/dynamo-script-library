@@ -1,0 +1,106 @@
+name: Bug report
+description: Report a problem with a tool, package, or documentation page.
+title: "[Bug]: "
+labels:
+  - bug
+  - needs-triage
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a problem. Before submitting, search existing issues
+        and read the tool README and `docs/TROUBLESHOOTING.md`.
+
+        Do not include confidential model data, customer names, credentials, or
+        security vulnerabilities in a public issue. Security issues must be
+        reported privately through GitHub Security Advisories.
+
+  - type: input
+    id: tool
+    attributes:
+      label: Tool and version
+      description: Name and version from the tool README or release asset.
+      placeholder: "Text Find & Replace 0.1.0"
+    validations:
+      required: true
+
+  - type: input
+    id: revit
+    attributes:
+      label: Revit version
+      placeholder: "Autodesk Revit 2024.2"
+    validations:
+      required: true
+
+  - type: input
+    id: dynamo
+    attributes:
+      label: Dynamo version
+      placeholder: "Dynamo 2.17 or Dynamo 3.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: engine
+    attributes:
+      label: Python engine
+      options:
+        - CPython 3
+        - IronPython 2.7
+        - Not applicable / Dynamo graph only
+        - Not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: Provide the smallest reproducible example, including input values.
+      placeholder: |
+        1. Open the attached/synthetic model...
+        2. Connect ...
+        3. Run ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: Include the exact error message and Dynamo warning text if available.
+    validations:
+      required: true
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs, screenshots, or sample files
+      description: Use synthetic data only. Drag files here or paste text.
+      render: text
+
+  - type: input
+    id: packages
+    attributes:
+      label: Installed Dynamo packages relevant to this tool
+      placeholder: "Clockwork for Dynamo 2.x 2.5.0, archilab 2024.1.0"
+
+  - type: checkboxes
+    id: checks
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched existing issues and the troubleshooting guide.
+          required: true
+        - label: I tested on a copy or backup of the model.
+          required: true
+        - label: This report does not contain confidential data or a security vulnerability.
+          required: true
+        - label: I am willing to help test a fix. (optional)

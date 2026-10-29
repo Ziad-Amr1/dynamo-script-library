@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/Ziad-Amr1/dynamo-script-library/security/advisories/new
+    about: Report security issues privately. Do not open a public issue.
+  - name: Downloading and installation help
+    url: https://github.com/Ziad-Amr1/dynamo-script-library/blob/main/docs/DOWNLOADING.md
+    about: Learn how to download the library, a tool package, or a single file.
+  - name: Troubleshooting guide
+    url: https://github.com/Ziad-Amr1/dynamo-script-library/blob/main/docs/TROUBLESHOOTING.md
+    about: Check common Dynamo, package, and Python engine problems first.
