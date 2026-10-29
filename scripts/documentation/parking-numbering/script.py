@@ -8,11 +8,13 @@ OUTPUT
     OUT[0] Created text-note records
     OUT[1] Per-element errors
     OUT[2] Parking element IDs without a bounding box
-    OUT[3] Summary dictionary
+    OUT[3] Summary dictionary, including spaces skipped because existing text
+         overlaps the parking bounding box
 
 Target: Revit 2025 / Dynamo 3 / CPython 3.
 """
 
+import re
 import clr
 
 clr.AddReference('RevitAPI')
@@ -84,31 +86,140 @@ parking_elements = list(collector.ToElements())
 #
 # IMPORTANT:
 # We use the Bounding Box of the parking element
-# in the ACTIVE VIEW.
+# transformed to model coordinates.
 #
-# This avoids depending on the Family Origin /
+# This computes the true geometric center for rotated/oriented
+# parking spaces and avoids depending on the Family Origin /
 # LocationPoint being at the visual center.
 #
 
 
-def get_center(element):
+def get_bbox_corners(bbox):
+    """Return all eight bounding-box corners in model coordinates."""
+    if bbox is None:
+        return []
 
+    transform = bbox.Transform
+    corners = []
+
+    for x in (bbox.Min.X, bbox.Max.X):
+        for y in (bbox.Min.Y, bbox.Max.Y):
+            for z in (bbox.Min.Z, bbox.Max.Z):
+                local_point = XYZ(x, y, z)
+                try:
+                    corners.append(transform.OfPoint(local_point))
+                except Exception:
+                    # Defensive fallback for unusual/invalid transforms.
+                    corners.append(local_point)
+
+    return corners
+
+
+def get_center(element):
+    """Get the center of the element's bounding box with fallbacks."""
     bbox = element.get_BoundingBox(view)
 
     if bbox is None:
+        try:
+            bbox = element.get_BoundingBox(None)
+        except Exception:
+            bbox = None
+
+    if bbox is not None:
+        corners = get_bbox_corners(bbox)
+        if corners:
+            center_x = sum(p.X for p in corners) / float(len(corners))
+            center_y = sum(p.Y for p in corners) / float(len(corners))
+            center_z = sum(p.Z for p in corners) / float(len(corners))
+            return XYZ(center_x, center_y, center_z)
+
+    # Fallback to LocationPoint if bounding box is unavailable
+    try:
+        loc = element.Location
+        if hasattr(loc, "Point"):
+            return loc.Point
+    except Exception:
+        pass
+
+    return None
+
+
+def get_axis_aligned_bounds(bbox):
+    """Return model-coordinate min/max bounds for a BoundingBoxXYZ."""
+    corners = get_bbox_corners(bbox)
+
+    if not corners:
         return None
 
-    center_x = (bbox.Min.X + bbox.Max.X) / 2.0
-    center_y = (bbox.Min.Y + bbox.Max.Y) / 2.0
-
-    # Use the element's bounding box Z center
-    center_z = (bbox.Min.Z + bbox.Max.Z) / 2.0
-
-    return XYZ(
-        center_x,
-        center_y,
-        center_z
+    return (
+        min(p.X for p in corners),
+        min(p.Y for p in corners),
+        min(p.Z for p in corners),
+        max(p.X for p in corners),
+        max(p.Y for p in corners),
+        max(p.Z for p in corners)
     )
+
+
+def bounds_overlap(a, b, tolerance=0.0):
+    """Check whether two axis-aligned bounds overlap."""
+    if a is None or b is None:
+        return False
+
+    # Compare XY only: TextNotes live in the active view plane, and their
+    # bounding-box Z range may not match the parking family's model Z range.
+    return not (
+        a[3] < b[0] - tolerance or b[3] < a[0] - tolerance or
+        a[4] < b[1] - tolerance or b[4] < a[1] - tolerance
+    )
+
+
+def is_numbering_text(text):
+    """Return True if text appears to be a parking number annotation.
+    
+    Identifies numeric labels (e.g. '01', '1', '99', '100', 'P-01', '#1')
+    while ignoring unrelated descriptive text (e.g. 'RESERVED', 'EV ONLY',
+    'DO NOT BLOCK', 'ACCESSIBLE').
+    """
+    if not text:
+        return False
+    s = str(text).strip()
+    if not s:
+        return False
+    if s.isdigit():
+        return True
+    if re.match(r'^(?:#|no\.?|p-?|bay\s*|sp-?)\s*\d+$', s, re.IGNORECASE):
+        return True
+    return False
+
+
+# Snapshot existing text notes in the active view BEFORE creating anything.
+# This makes repeated runs non-destructive: spaces already containing a
+# numbering note are skipped rather than receiving duplicate overlapping notes.
+existing_text_notes = list(
+    FilteredElementCollector(doc, view.Id)
+    .OfClass(TextNote)
+    .WhereElementIsNotElementType()
+    .ToElements()
+)
+
+existing_text_bounds = []
+for existing_note in existing_text_notes:
+    try:
+        note_bbox = existing_note.get_BoundingBox(view)
+        note_bounds = get_axis_aligned_bounds(note_bbox)
+        if note_bounds is not None:
+            try:
+                note_text = existing_note.Text
+            except Exception:
+                note_text = ""
+            existing_text_bounds.append({
+                "id": existing_note.Id.IntegerValue,
+                "bounds": note_bounds,
+                "text": note_text
+            })
+    except Exception:
+        pass
 
 
 # Store parking + center point
@@ -257,6 +368,7 @@ TEXT_SIZE_FT = TEXT_SIZE_MM / 304.8
 
 created_notes = []
 errors = []
+skipped_existing_text = []
 
 
 TransactionManager.Instance.EnsureInTransaction(doc)
@@ -266,6 +378,32 @@ for index, item in enumerate(ordered_parking):
 
     element = item["element"]
     point = item["point"]
+
+    # Skip a parking space if an existing numbering note overlaps its bounding box.
+    # This prevents duplicate numbering upon re-running while preserving existing notes.
+    # Unrelated descriptive annotations (e.g. 'RESERVED', 'EV ONLY') do not cause
+    # the space to be skipped.
+    try:
+        parking_bbox = element.get_BoundingBox(view)
+        if parking_bbox is None:
+            parking_bbox = element.get_BoundingBox(None)
+        parking_bounds = get_axis_aligned_bounds(parking_bbox)
+    except Exception:
+        parking_bounds = None
+
+    conflicting_note_ids = []
+    if parking_bounds is not None:
+        for existing_note in existing_text_bounds:
+            if bounds_overlap(parking_bounds, existing_note["bounds"]):
+                if is_numbering_text(existing_note.get("text", "")):
+                    conflicting_note_ids.append(existing_note["id"])
+
+    if conflicting_note_ids:
+        skipped_existing_text.append({
+            "ParkingId": element.Id.IntegerValue,
+            "ExistingTextNoteIds": conflicting_note_ids
+        })
+        continue
 
     # Example:
     # 01
@@ -362,6 +500,12 @@ summary = {
 
     "TextNotesCreated":
         len(created_notes),
+
+    "SkippedExistingText":
+        len(skipped_existing_text),
+
+    "ExistingTextConflicts":
+        skipped_existing_text,
 
     "NoLocation":
         len(no_location),

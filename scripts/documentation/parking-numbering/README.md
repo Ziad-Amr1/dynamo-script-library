@@ -1,7 +1,7 @@
 # Parking Numbering
 
 **Category:** `documentation`  
-**Version:** `0.1.0`  
+**Version:** `0.1.1`  
 **Status:** Development  
 **Target:** Revit 2025 / Dynamo 3 / CPython 3  
 **Python engine:** CPython 3
@@ -18,6 +18,11 @@ graph. The unused Boolean input was removed, the start-number input is now
 `IN[0]` and visible on the canvas, and the original file is retained in
 [`legacy/`](legacy/README.md) for reference only.
 
+**v0.1.1 changes:** placement now uses transformed bounding-box corners for
+better centering on rotated/oriented parking spaces; existing text notes in the
+active view are scanned and parking spaces overlapping them are skipped
+(non-destructive, no deletions/moves).
+
 > **Test status:** this tool has not been run in a live Revit session. The graph
 > structure, all connectors, and the embedded Python were checked, but the
 > result still needs testing on a copy of a real model.
@@ -25,8 +30,9 @@ graph. The unused Boolean input was removed, the start-number input is now
 ## Features
 
 - Collects parking elements visible in the active view.
-- Uses the view-specific bounding-box center of each parking element, not the
-  family origin.
+- Uses transformed view bounding-box corners to compute the geometric center
+  (handles rotated/oriented parking spaces; falls back to bbox/location if
+  needed).
 - Sorts rows from top to bottom and each row from left to right.
 - Groups parking elements into rows using a fixed 1 foot (about 304.8 mm)
   vertical tolerance.
@@ -35,10 +41,12 @@ graph. The unused Boolean input was removed, the start-number input is now
 - Creates centered, horizontal text notes using the project's default text note
   type.
 - Sets the text size to 150 mm when the size parameter is writable.
-- Returns created notes, per-element errors, parking without a bounding box, and
-  a summary dictionary.
-- Skips parking elements without a usable bounding box instead of stopping the
-  whole run.
+- Scans existing text notes in the active view before creation; skips parking
+  spaces overlapping existing text (non-destructive; never deletes/moves).
+- Returns created notes, errors/skipped records, parking without a usable
+  center, and a summary dictionary.
+- Skips parking elements without a usable bounding box/center instead of stopping
+  the whole run.
 - No Dynamo packages or external Python packages are required.
 
 ## Requirements
@@ -137,9 +145,9 @@ were removed in the maintained version; see [`legacy/`](legacy/README.md).
 | Output | Type | Description |
 | --- | --- | --- |
 | `OUT[0]` | list of dictionaries | One record for each created text note: `ParkingId`, `Number`, `TextNoteId`, `X`, `Y`. |
-| `OUT[1]` | list of dictionaries | One record for each failed parking element: `ParkingId`, `Number`, `Error`. |
-| `OUT[2]` | list of integers | Parking element IDs that had no usable bounding box in the active view. |
-| `OUT[3]` | dictionary | Summary with `ParkingFound`, `ParkingWithLocation`, `RowsDetected`, `TextNotesCreated`, `NoLocation`, `Errors`, and `ActiveView`. |
+| `OUT[1]` | list of dictionaries | Per-element errors encountered during creation. |
+| `OUT[2]` | list of integers | Parking element IDs that had no usable center in the active view. |
+| `OUT[3]` | dictionary | Summary with `ParkingFound`, `ParkingWithLocation`, `RowsDetected`, `TextNotesCreated`, `SkippedExistingText`, `ExistingTextConflicts`, `NoLocation`, `Errors`, `ActiveView`. |
 
 `X` and `Y` in the created-note records are Revit internal units (feet), not
 millimetres. The text-note position itself is correct in the view.
@@ -154,23 +162,27 @@ summary and the error lists.
 - **Text notes are annotations, not parking parameters.** The tool does not
   write a number into the parking element's properties and does not create
   Revit tags.
-- **Running the tool twice creates duplicate notes.** There is no check for
-  existing text notes and no cleanup step. Delete the previous notes or undo
-  before running again.
+- **Non-destructive by default.** Existing text notes in the active view are
+  scanned before creation. Parking spaces overlapping existing text are skipped
+  (reported in `SkippedExistingText`/conflicts). No existing annotations are
+  deleted or moved. The tool does **not** assume unrelated text belongs to it.
+- **Re-running the graph.** Previously created notes from this tool may be
+  detected as potential conflicts by proximity+numeric pattern in some cases and
+  skipped; always inspect results on a copy.
 - **The notes do not follow the parking elements.** They are independent text
   notes. Moving or deleting a parking element does not move or delete its note.
 - **Row detection is fixed.** Rows are grouped with a 1 foot tolerance
   (`ROW_TOLERANCE = 1.0`) and ordered top-to-bottom (`ROWS_TOP_TO_BOTTOM =
   True`). These are constants in the script, not graph inputs.
-- **View rotation is not considered.** Ordering uses model X/Y. A rotated view
-  may show a different visual order.
+- **View rotation is not considered for ordering.** Ordering uses model X/Y. A
+  rotated view may show a different visual order.
 - **The text type and size are fixed.** The script uses the default text note
-  type and a 150 mm text size. If the text-size parameter is read-only, the
-  default size remains.
+  type and a 150 mm text size (configurable via `TEXT_SIZE_MM` in the script). If the
+  text-size parameter is read-only, the default size remains.
 - **Partial success is possible.** Each text note is wrapped in its own error
-  handler. Notes created before an error remain in the model, and the error is
-  reported in `OUT[1]`. The graph does not roll back successful notes.
-- **Parking without a bounding box is skipped.** Its element ID is returned in
+  handler. Notes created before an error remain in the model, and errors/skipped
+  items are reported in `OUT[1]`. The graph does not roll back successful notes.
+- **Parking without a usable center is skipped.** Its element ID is returned in
   `OUT[2]`.
 - **The start number is not range-checked.** Zero and negative numbers are
   accepted; negative values may produce unexpected labels. Use a positive start
@@ -179,8 +191,8 @@ summary and the error lists.
   not allow annotation may fail for every parking element.
 - **Only the `OST_Parking` category is processed.** Generic model families or
   other categories are ignored even if they look like parking spaces.
-- **Element centers come from the bounding box.** Irregular or nested families
-  can produce a center that is not the visual center of the parking bay.
+- **Element centers come from geometry/bounding box.** Irregular or nested
+  families can still be tricky; placement is best-effort and geometry-based.
 - **Units.** The start number is unitless. Text size is set from millimetres, and
   row tolerance uses Revit feet internally.
 - **No grouping, no numbering schedule, and no automatic view creation.** This
@@ -211,7 +223,7 @@ Revit and Dynamo versions when reporting the problem.
 See [CHANGELOG.md](CHANGELOG.md).
 
 | Version | Date | Summary |
-| --- | --- | --- |
+| `0.1.1` | 2026-10-29 | Geometry-based centering (transformed bbox corners), non-destructive handling of existing text notes, updated outputs/summary. |
 | `0.1.0` | 2026-10-29 | First repository import. Removes the unused Boolean, exposes the start number as `IN[0]`, and adds package documentation. |
 
 ## License
@@ -222,3 +234,12 @@ Part of the Dynamo Script Library, licensed under the
 
 The original graph was provided by the repository owner and is retained in
 `legacy/` for reference. The legacy folder is excluded from release packages.
+
+**Manual test plan (since Revit/Dynamo not executable here):**
+1. 2.3×5.0 m parking spaces - verify center alignment (check X/Y vs bbox center).
+2. 2.4×5.0 m parking spaces - verify center alignment.
+3. 2.5×5.0 m parking spaces - verify center alignment.
+4. Rotated parking spaces - verify centering follows space orientation.
+5. Spaces with existing text annotations - verify skipped, no deletion/move.
+6. Re-run on same view - verify no duplicates created on conflicting spaces.
+7. Different parking family types - verify fallback to bbox/location if geometry polygon unavailable.

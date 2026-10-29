@@ -304,6 +304,104 @@ class ParkingNumberingTests(unittest.TestCase):
         self.assertIn("ParkingNumbering.dyn", packaged)
         self.assertFalse(any(name.startswith("legacy/") for name in packaged))
 
+    def _extract_script_functions(self) -> dict:
+        import ast
+
+        code = (self.TOOL / "script.py").read_text(encoding="utf-8")
+        tree = ast.parse(code)
+        func_nodes = [n for n in tree.body if isinstance(n, ast.FunctionDef)]
+        module_ast = ast.Module(
+            body=[ast.Import(names=[ast.alias(name="re")])] + func_nodes,
+            type_ignores=[],
+        )
+        ast.fix_missing_locations(module_ast)
+        ns: dict = {}
+        exec(compile(module_ast, "<parking_funcs>", "exec"), ns)
+        return ns
+
+    def test_annotation_detection_distinguishes_numbers_from_unrelated_text(self) -> None:
+        funcs = self._extract_script_functions()
+        is_numbering = funcs["is_numbering_text"]
+
+        numbering_cases = [
+            "01", "02", "1", "99", "100", "1001",
+            "#01", "# 1", "No. 1", "P-01", "P1", "Bay 12", "SP-04",
+        ]
+        for text in numbering_cases:
+            with self.subTest(text=text):
+                self.assertTrue(is_numbering(text), f"Should identify '{text}' as a numbering note")
+
+        unrelated_cases = [
+            "RESERVED", "ACCESSIBLE", "HANDICAP", "EV CHARGING ONLY",
+            "DO NOT BLOCK", "STAFF ONLY", "VISITOR", "RAMP", "GARAGE ENTRY", "SEE NOTE 4",
+        ]
+        for text in unrelated_cases:
+            with self.subTest(text=text):
+                self.assertFalse(is_numbering(text), f"Should ignore unrelated text '{text}'")
+
+    def test_geometric_center_rotated_parking_spaces(self) -> None:
+        import math
+
+        class MockXYZ:
+            def __init__(self, x: float, y: float, z: float) -> None:
+                self.X = float(x)
+                self.Y = float(y)
+                self.Z = float(z)
+
+        class MockTransform:
+            def __init__(self, origin: MockXYZ, angle_rad: float) -> None:
+                self.origin = origin
+                self.angle = angle_rad
+
+            def OfPoint(self, p: MockXYZ) -> MockXYZ:
+                cos_a = math.cos(self.angle)
+                sin_a = math.sin(self.angle)
+                rx = p.X * cos_a - p.Y * sin_a
+                ry = p.X * sin_a + p.Y * cos_a
+                return MockXYZ(self.origin.X + rx, self.origin.Y + ry, self.origin.Z + p.Z)
+
+        class MockBBox:
+            def __init__(self, w: float, l: float, h: float, origin: MockXYZ, angle_deg: float) -> None:
+                self.Min = MockXYZ(-w / 2.0, -l / 2.0, 0.0)
+                self.Max = MockXYZ(w / 2.0, l / 2.0, h)
+                self.Transform = MockTransform(origin, math.radians(angle_deg))
+
+        funcs = self._extract_script_functions()
+        funcs["XYZ"] = MockXYZ
+        get_corners = funcs["get_bbox_corners"]
+
+        dimensions = [(2.3, 5.0), (2.4, 5.0), (2.5, 5.0)]
+        angles = [0, 30, 45, 60, 90, 135, 180]
+        origins = [MockXYZ(0, 0, 0), MockXYZ(12.5, -34.2, 5.0)]
+
+        for w, l in dimensions:
+            for ang in angles:
+                for orig in origins:
+                    bbox = MockBBox(w, l, 0.2, orig, ang)
+                    corners = get_corners(bbox)
+                    self.assertEqual(len(corners), 8)
+                    cx = sum(p.X for p in corners) / 8.0
+                    cy = sum(p.Y for p in corners) / 8.0
+                    cz = sum(p.Z for p in corners) / 8.0
+                    self.assertAlmostEqual(cx, orig.X, places=5)
+                    self.assertAlmostEqual(cy, orig.Y, places=5)
+                    self.assertAlmostEqual(cz, orig.Z + 0.1, places=5)
+
+    def test_bounds_overlap_logic(self) -> None:
+        funcs = self._extract_script_functions()
+        bounds_overlap = funcs["bounds_overlap"]
+
+        # Parking space bounds [xmin, ymin, zmin, xmax, ymax, zmax]
+        parking_bounds = (-1.2, -2.5, 0.0, 1.2, 2.5, 0.5)
+
+        # Note at center [width 0.3, height 0.3]
+        centered_note_bounds = (-0.15, -0.15, 0.0, 0.15, 0.15, 0.0)
+        self.assertTrue(bounds_overlap(parking_bounds, centered_note_bounds))
+
+        # Note in adjacent parking space (offset X by 2.4 m)
+        adjacent_note_bounds = (2.25, -0.15, 0.0, 2.55, 0.15, 0.0)
+        self.assertFalse(bounds_overlap(parking_bounds, adjacent_note_bounds))
+
 
 class LinkCheckerTests(unittest.TestCase):
     def test_reports_missing_relative_target(self) -> None:

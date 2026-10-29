@@ -10,6 +10,19 @@ file only describes repository-level changes and coordinated releases.
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-10-29
+
+### Fixed
+
+- **Parking Numbering:** Centers text notes using transformed bounding-box corners with fallbacks, correctly positioning numbers on rotated parking spaces.
+- **Parking Numbering:** Avoids duplicate numbers on re-run by detecting existing numbering notes without deleting or modifying any annotations.
+- **Parking Numbering:** Discriminates between numbering notes and unrelated text (e.g. "RESERVED", "EV ONLY") to avoid false-positive skip conflicts.
+
+### Added
+
+- Unit tests for geometric center calculation across rotated parking spaces (dimensions 2.3 × 5.0 m, 2.4 × 5.0 m, 2.5 × 5.0 m) and annotation pattern discrimination.
+- Release notes for `v0.1.1` in `docs/releases/v0.1.1.md`.
+
 ## [0.1.0] - 2026-10-29
 
 ### Added
@@ -29,5 +42,6 @@ file only describes repository-level changes and coordinated releases.
 - Issue templates, pull request template, security policy, and contribution
   guidelines.
 
-[Unreleased]: https://github.com/Ziad-Amr1/dynamo-script-library/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/Ziad-Amr1/dynamo-script-library/compare/v0.1.1...HEAD
+[0.1.1]: https://github.com/Ziad-Amr1/dynamo-script-library/releases/tag/v0.1.1
 [0.1.0]: https://github.com/Ziad-Amr1/dynamo-script-library/releases/tag/v0.1.0

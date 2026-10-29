@@ -70,23 +70,24 @@ in [docs/DOWNLOADING.md](docs/DOWNLOADING.md).
 
 ## Releases and downloads
 
-**Current release: [v0.1.0](https://github.com/Ziad-Amr1/dynamo-script-library/releases/tag/v0.1.0)**
+**Current release: [v0.1.1](https://github.com/Ziad-Amr1/dynamo-script-library/releases/tag/v0.1.1)**
 (2026-10-29). Download a ready-to-extract ZIP directly; Git is not required.
 
 | Tool | Version | Direct download | Compatibility |
 | --- | --- | --- | --- |
-| Text Find & Replace | `0.1.0` | [Download ZIP](https://github.com/Ziad-Amr1/dynamo-script-library/releases/download/v0.1.0/text-find-replace-v0.1.0.zip) | CPython 3.8+; no Revit API dependency; not verified in Revit |
-| Car Ramp Generator | `0.1.0` | [Download ZIP](https://github.com/Ziad-Amr1/dynamo-script-library/releases/download/v0.1.0/car-ramp-generator-v0.1.0.zip) | Built for Revit 2025 / Dynamo 3 / CPython 3; not verified in Revit |
-| Parking Numbering | `0.1.0` | [Download ZIP](https://github.com/Ziad-Amr1/dynamo-script-library/releases/download/v0.1.0/parking-numbering-v0.1.0.zip) | Built for Revit 2025 / Dynamo 3 / CPython 3; not verified in Revit |
+| Text Find & Replace | `0.1.0` | [Download ZIP](https://github.com/Ziad-Amr1/dynamo-script-library/releases/download/v0.1.1/text-find-replace-v0.1.0.zip) | CPython 3.8+; no Revit API dependency; not verified in Revit |
+| Car Ramp Generator | `0.1.0` | [Download ZIP](https://github.com/Ziad-Amr1/dynamo-script-library/releases/download/v0.1.1/car-ramp-generator-v0.1.0.zip) | Built for Revit 2025 / Dynamo 3 / CPython 3; not verified in Revit |
+| Parking Numbering | `0.1.1` | [Download ZIP](https://github.com/Ziad-Amr1/dynamo-script-library/releases/download/v0.1.1/parking-numbering-v0.1.1.zip) | Built for Revit 2025 / Dynamo 3 / CPython 3; not verified in Revit |
 
 Each ZIP extracts to one folder and includes the tool's `.dyn` and/or `script.py`,
 README, changelog, manifest, and package manifest. No Dynamo packages are
 required. Files under `legacy/` are excluded.
 
 - [GitHub Releases page](https://github.com/Ziad-Amr1/dynamo-script-library/releases)
-- [All v0.1.0 assets](https://github.com/Ziad-Amr1/dynamo-script-library/releases/tag/v0.1.0)
-- [SHA-256 checksums](https://github.com/Ziad-Amr1/dynamo-script-library/releases/download/v0.1.0/SHA256SUMS.txt)
-- [Package index](https://github.com/Ziad-Amr1/dynamo-script-library/releases/download/v0.1.0/index.json)
+- [All v0.1.1 assets](https://github.com/Ziad-Amr1/dynamo-script-library/releases/tag/v0.1.1)
+- [SHA-256 checksums](https://github.com/Ziad-Amr1/dynamo-script-library/releases/download/v0.1.1/SHA256SUMS.txt)
+- [Package index](https://github.com/Ziad-Amr1/dynamo-script-library/releases/download/v0.1.1/index.json)
+- [v0.1.1 release notes](docs/releases/v0.1.1.md)
 - [v0.1.0 release notes](docs/releases/v0.1.0.md)
 
 Download the ZIP, extract it to a permanent folder, open the included
@@ -114,7 +115,7 @@ _Annotations, numbering, schedules, exports, reports, and project documentation 
 
 | Tool | Description | Version | Engine | Status |
 | --- | --- | --- | --- | --- |
-| [Parking Numbering](scripts/documentation/parking-numbering/README.md) | Numbers parking elements visible in the active view with centered text notes, ordered by row and starting from a chosen number. | `0.1.0` | CPython 3 | Development |
+| [Parking Numbering](scripts/documentation/parking-numbering/README.md) | Numbers parking elements visible in the active view with centered text notes, ordered by row and starting from a chosen number. | `0.1.1` | CPython 3 | Development |
 
 ### Utilities
 
