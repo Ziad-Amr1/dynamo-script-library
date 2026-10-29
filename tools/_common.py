@@ -15,6 +15,7 @@ from pathlib import Path
 from typing import Any
 
 SKIP_DIRS = {"__pycache__", ".git", "dist", "build", "backup", ".venv", "venv"}
+PACKAGE_EXCLUDED_DIRS = SKIP_DIRS | {"legacy", "archive"}
 SEMVER_RE = re.compile(
     r"^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)"
     r"(?:-([0-9A-Za-z.-]+))?(?:\+([0-9A-Za-z.-]+))?$"
@@ -357,7 +358,7 @@ def iter_package_files(tool: Tool) -> list[Path]:
         if not path.is_file():
             continue
         relative = path.relative_to(tool.path)
-        if any(part in SKIP_DIRS for part in relative.parts):
+        if any(part in PACKAGE_EXCLUDED_DIRS for part in relative.parts):
             continue
         if path.suffix in {".pyc", ".pyo"}:
             continue

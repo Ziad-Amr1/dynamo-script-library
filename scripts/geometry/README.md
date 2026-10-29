@@ -1,10 +1,11 @@
 # Geometry
 
-Tools for geometry analysis, transformation, and interoperability that support
-Revit workflows.
+Tools for geometry generation, analysis, transformation, and interoperability
+that support Revit workflows.
 
 ## Belongs here
 
+- Ramp, floor, curb, and other model-geometry generators.
 - Coordinate and transform helpers.
 - Bounding-box and clearance checks.
 - Curve, surface, and solid analysis.

@@ -82,6 +82,10 @@ A tool ZIP contains:
 SHA-256 hashes for every file. The archive uses fixed timestamps and sorted file
 order so identical input produces an identical ZIP.
 
+Tool subfolders named `legacy/` or `archive/` stay in the repository for history
+but are excluded from release ZIPs. This keeps superseded files available for
+reference without shipping them to end users.
+
 ## Automation
 
 | Workflow | Trigger | Purpose |

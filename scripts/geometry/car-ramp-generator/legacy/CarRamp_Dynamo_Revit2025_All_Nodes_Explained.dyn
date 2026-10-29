@@ -1,0 +1,885 @@
+{
+  "Uuid": "fbfa71a2-17ab-4c1b-8349-bf2d63d35d57",
+  "IsCustomNode": false,
+  "Description": "منشئ رامب سيارات: 16 مدخل موضح ومُوصل، مناسب كبنية لـ Dynamo 3 / Revit 2025. راجع README قبل التشغيل.",
+  "Name": "CarRamp_Dynamo_Revit2025_All_Nodes_Explained",
+  "ElementResolver": {
+    "ResolutionMap": {}
+  },
+  "Inputs": [],
+  "Outputs": [],
+  "Nodes": [
+    {
+      "ConcreteType": "CoreNodeModels.Input.DoubleInput, CoreNodeModels",
+      "NumberType": "Double",
+      "Id": "0c2fb539c71c486ba4e05d6d9e8383fa",
+      "NodeType": "NumberInputNode",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "3ef133d00d5c450d9f5fb626ba5ca08d",
+          "Name": "",
+          "Description": "Number",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Creates a number",
+      "InputValue": 15.0
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Input.DoubleInput, CoreNodeModels",
+      "NumberType": "Double",
+      "Id": "e9f37944dc894c808ad33db03a0fa057",
+      "NodeType": "NumberInputNode",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "8b921a19288545c5a25659224a46dcde",
+          "Name": "",
+          "Description": "Number",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Creates a number",
+      "InputValue": 3000.0
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Input.DoubleInput, CoreNodeModels",
+      "NumberType": "Double",
+      "Id": "c281b672f525464e9f5cc7523728e4bb",
+      "NodeType": "NumberInputNode",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "6ed17c0a785447b2a3a9584aefdf94dd",
+          "Name": "",
+          "Description": "Number",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Creates a number",
+      "InputValue": 0.0
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Input.DoubleInput, CoreNodeModels",
+      "NumberType": "Double",
+      "Id": "20b23b48510e4e49bce39a51164fea4e",
+      "NodeType": "NumberInputNode",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "40cc6122bf6b4a31b91db0ab69e3d64d",
+          "Name": "",
+          "Description": "Number",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Creates a number",
+      "InputValue": 0.0
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Input.DoubleInput, CoreNodeModels",
+      "NumberType": "Double",
+      "Id": "979eff6655914fdbab9a8343eb5221f2",
+      "NodeType": "NumberInputNode",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "d0e4e6fb1ee5435dac84e5b4d4c8f880",
+          "Name": "",
+          "Description": "Number",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Creates a number",
+      "InputValue": 0.0
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Input.StringInput, CoreNodeModels",
+      "Id": "241ea61d5d6c404384f1ac32cc293d42",
+      "NodeType": "StringInputNode",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "ac7bca82b3f748348ea7cc35c59249cf",
+          "Name": "",
+          "Description": "String",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Creates a string",
+      "InputValue": "two-way"
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Input.DoubleInput, CoreNodeModels",
+      "NumberType": "Double",
+      "Id": "9d35e08069f94f17b624084089e562a0",
+      "NodeType": "NumberInputNode",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "4c1d6e7bd0e2419687e73c1d6d647d5e",
+          "Name": "",
+          "Description": "Number",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Creates a number",
+      "InputValue": 500.0
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Input.DoubleInput, CoreNodeModels",
+      "NumberType": "Double",
+      "Id": "005fc76219ae4d1c9f4d4b33649a398e",
+      "NodeType": "NumberInputNode",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "68b85100b364410795b2019f2cf54feb",
+          "Name": "",
+          "Description": "Number",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Creates a number",
+      "InputValue": 300.0
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Input.DoubleInput, CoreNodeModels",
+      "NumberType": "Double",
+      "Id": "97538d35714c4f1f8b7df6355ebda202",
+      "NodeType": "NumberInputNode",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "4e50065305084142b4f89af7dc6ea134",
+          "Name": "",
+          "Description": "Number",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Creates a number",
+      "InputValue": 150.0
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Input.DoubleInput, CoreNodeModels",
+      "NumberType": "Double",
+      "Id": "2edb65a6ece44ee18c1c757d2b7b888e",
+      "NodeType": "NumberInputNode",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "c248b5cd2b1f477ab6f20624c72ba7b3",
+          "Name": "",
+          "Description": "Number",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Creates a number",
+      "InputValue": 100.0
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Input.StringInput, CoreNodeModels",
+      "Id": "99a8cbeb0ced48d48907b2f5c8ccefd4",
+      "NodeType": "StringInputNode",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "c3c71c2924e3448088377c7bda68853d",
+          "Name": "",
+          "Description": "String",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Creates a string",
+      "InputValue": "standard"
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Input.DoubleInput, CoreNodeModels",
+      "NumberType": "Double",
+      "Id": "de38f0c6864540949fbf27087b7b3952",
+      "NodeType": "NumberInputNode",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "98cf83497e704a53bb4862d8dd2eb53a",
+          "Name": "",
+          "Description": "Number",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Creates a number",
+      "InputValue": 2200.0
+    },
+    {
+      "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
+      "Code": "# -*- coding: utf-8 -*-\n# CAR RAMP GENERATOR - Revit 2025 / Dynamo CPython3\n# Egyptian Garage Code reference: uploaded Egyptian garage code draft (2023).\n# Creates sloped ramp Floors + raised curb Floors, then groups all created elements.\n#\n# INPUTS\n# IN[0]  Level A (Revit Level)\n# IN[1]  Level B (Revit Level) - order does not matter\n# IN[2]  Main slope percent (default 15; max 15)\n# IN[3]  CLEAR lane width in mm (default 3000 per lane)\n# IN[4]  Start X mm (top/high end, left corner)\n# IN[5]  Start Y mm\n# IN[6]  Direction angle degrees (0 = down along +X, 90 = down along +Y)\n# IN[7]  Ramp/drive Floor Type element OR exact Floor Type name (optional; first type if empty)\n# IN[8]  Traffic type: 'one-way' or 'two-way' (default 'one-way')\n# IN[9]  Curb Floor Type element OR exact Floor Type name (optional; seeks ~150mm type)\n# IN[10] Side curb width mm (default 500)\n# IN[11] Center curb width mm (default 300; only for two-way)\n# IN[12] Side curb height mm (default 150; code draft says curb height max 150mm)\n# IN[13] Center curb height mm (default 100; code draft says center divider max 100mm)\n# IN[14] Vehicle class: 'standard', 'service', or 'waste' (service/waste clear lane = 4000mm)\n# IN[15] Required overhead clear height mm (default 2200; reported as design clearance target)\n#\n# NOTES\n# - Total ramp width is calculated automatically:\n#   one-way = clear lane + 2 side curbs\n#   two-way = 2 clear lanes + 2 side curbs + center curb\n# - Curb floors are modeled as narrow sloped Floor strips whose TOP surface is raised\n#   above the driving surface by the configured curb height. The selected curb Floor Type\n#   should have a compound-structure thickness close to that height (e.g. 150mm side curb).\n# - The 2023 code PDF text/table appears to show a 500mm central divider in the ramp table,\n#   while this script defaults to the requested 300mm. Confirm this design choice with the\n#   responsible designer/authority before using for compliance.\n# - For main slope > 10%, two 3000mm transitions at half the main slope are generated.\n# - OUT = [group, report_lines, [bottom_left_X_mm, bottom_left_Y_mm]]\n\nimport clr\nclr.AddReference('RevitAPI')\nclr.AddReference('RevitServices')\n\nfrom Autodesk.Revit.DB import (\n    XYZ, Line, CurveLoop, Floor, FloorType, Level, Options, PlanarFace,\n    ElementId, ElementTransformUtils, FilteredElementCollector, SubTransaction\n)\nfrom RevitServices.Persistence import DocumentManager\nfrom RevitServices.Transactions import TransactionManager\nfrom System.Collections.Generic import List\nimport math\n\n\ndoc = DocumentManager.Instance.CurrentDBDocument\nFT = 1.0 / 304.8  # mm to feet\nTRANS_LEN_MM = 3000.0\n\n\ndef get_in(i, default):\n    try:\n        v = IN[i]\n        return default if v is None else v\n    except Exception:\n        return default\n\n\ndef norm_text(value):\n    try:\n        return str(value).strip().lower().replace('_', '-').replace(' ', '-')\n    except Exception:\n        return ''\n\n\ndef resolve_floor_type(value, all_types, fallback=None):\n    \"\"\"Accept a FloorType element or an exact type name string.\"\"\"\n    if value is not None:\n        try:\n            el = UnwrapElement(value)\n            if el is not None and isinstance(el, FloorType):\n                return el\n        except Exception:\n            pass\n        try:\n            wanted = str(value).strip().lower()\n            if wanted:\n                for ft in all_types:\n                    try:\n                        if ft.Name.strip().lower() == wanted:\n                            return ft\n                    except Exception:\n                        pass\n        except Exception:\n            pass\n    return fallback\n\n\ndef type_thickness_mm(ftype):\n    try:\n        cs = ftype.GetCompoundStructure()\n        if cs is not None:\n            return cs.GetWidth() / FT\n    except Exception:\n        pass\n    return None\n\n\n# ---------- resolve levels from selected Level elements OR exact level names ----------\nall_levels = list(FilteredElementCollector(doc).OfClass(Level))\n\ndef resolve_level(value, index):\n    candidate = None\n    try:\n        candidate = UnwrapElement(value)\n    except Exception:\n        candidate = value\n    if candidate is not None and isinstance(candidate, Level):\n        return candidate\n    wanted = '' if value is None else str(value).strip().lower()\n    if wanted:\n        for level in all_levels:\n            try:\n                if level.Name.strip().lower() == wanted:\n                    return level\n            except Exception:\n                pass\n    names = ', '.join(sorted([str(l.Name) for l in all_levels]))\n    raise ValueError('IN[%d]: enter an exact Level name from this project. Available Levels: %s' % (index, names))\n\nlv_a = resolve_level(get_in(0, None), 0)\nlv_b = resolve_level(get_in(1, None), 1)\n\nif lv_a.Elevation >= lv_b.Elevation:\n    lv_top, lv_bot = lv_a, lv_b\nelse:\n    lv_top, lv_bot = lv_b, lv_a\n\nZ_TOP = lv_top.Elevation / FT  # mm\nZ_BOT = lv_bot.Elevation / FT  # mm\nDROP = Z_TOP - Z_BOT\nif DROP <= 0:\n    raise ValueError('The two levels have the same elevation.')\n\nSLOPE = float(get_in(2, 15.0))\nCLEAR_LANE = float(get_in(3, 3000.0))\nOX = float(get_in(4, 0.0))\nOY = float(get_in(5, 0.0))\nANG = math.radians(float(get_in(6, 0.0)))\nDX, DY = math.cos(ANG), math.sin(ANG)\nTRAFFIC = norm_text(get_in(8, 'one-way'))\nSIDE_CURB_W = float(get_in(10, 500.0))\nCENTER_CURB_W = float(get_in(11, 300.0))\nSIDE_CURB_H = float(get_in(12, 150.0))\nCENTER_CURB_H = float(get_in(13, 100.0))\nVEHICLE_CLASS = norm_text(get_in(14, 'standard'))\nOVERHEAD_CLEAR_MM = float(get_in(15, 2200.0))\n\n# Service and waste vehicles require a 4000mm clear lane by requested project rule.\nif VEHICLE_CLASS in ('service', 'service-vehicle', 'waste', 'waste-vehicle', 'garbage', 'garbage-truck', 'refuse'):\n    CLEAR_LANE = 4000.0\nelif VEHICLE_CLASS not in ('standard', 'car', 'passenger-car', 'normal', 'none', ''):\n    raise ValueError(\"IN[14] must be 'standard', 'service', or 'waste'.\")\n\nif SLOPE <= 0 or SLOPE > 15.0:\n    raise ValueError('Main slope must be greater than 0% and no more than 15%.')\nif CLEAR_LANE <= 0:\n    raise ValueError('Clear lane width must be positive.')\nif SIDE_CURB_W < 0 or CENTER_CURB_W < 0:\n    raise ValueError('Curb widths cannot be negative.')\nif SIDE_CURB_H <= 0 or CENTER_CURB_H <= 0:\n    raise ValueError('Curb heights must be positive.')\nif OVERHEAD_CLEAR_MM <= 0:\n    raise ValueError('Overhead clear height must be positive.')\nif TRAFFIC in ('oneway', 'one-way', '1-way', 'single'):\n    TRAFFIC = 'one-way'\nelif TRAFFIC in ('twoway', 'two-way', '2-way', 'double'):\n    TRAFFIC = 'two-way'\nelse:\n    raise ValueError(\"IN[8] must be 'one-way' or 'two-way'.\")\n\nif TRAFFIC == 'one-way':\n    TOTAL_WIDTH = CLEAR_LANE + 2.0 * SIDE_CURB_W\nelse:\n    TOTAL_WIDTH = 2.0 * CLEAR_LANE + 2.0 * SIDE_CURB_W + CENTER_CURB_W\n\nall_levels = list(FilteredElementCollector(doc).OfClass(Level))\nall_floor_types = list(FilteredElementCollector(doc).OfClass(FloorType))\nif not all_floor_types:\n    raise ValueError('No Floor Types were found in this project.')\n\n\ndef nearest_level(z_ft):\n    return min(all_levels, key=lambda l: abs(l.Elevation - z_ft))\n\n\ndef P(x, y, z_ft):\n    \"\"\"Local x along ramp and y across ramp, coordinates in mm; z_ft in Revit feet.\"\"\"\n    gx = OX + x * DX - y * DY\n    gy = OY + x * DY + y * DX\n    return XYZ(gx * FT, gy * FT, z_ft)\n\n\nramp_type = resolve_floor_type(get_in(7, None), all_floor_types, all_floor_types[0])\nif ramp_type is None:\n    ramp_type = all_floor_types[0]\n\ncurb_type_input = get_in(9, None)\ncurb_type = resolve_floor_type(curb_type_input, all_floor_types, None)\nif curb_type is None:\n    # If not supplied, prefer a type whose compound thickness is closest to 150mm.\n    candidates = []\n    for ft in all_floor_types:\n        th = type_thickness_mm(ft)\n        if th is not None:\n            candidates.append((abs(th - SIDE_CURB_H), ft))\n    curb_type = sorted(candidates, key=lambda item: item[0])[0][1] if candidates else ramp_type\n\n\n# ---------- segment calculation ----------\ndef make_segments(drop_mm):\n    if SLOPE > 10.0:\n        trans_slope = SLOPE / 2.0\n        trans_drop = TRANS_LEN_MM * trans_slope / 100.0\n        main_drop = drop_mm - 2.0 * trans_drop\n        if main_drop <= 0:\n            raise ValueError(\n                'Height difference %.0fmm is too small for two 3000mm transitions at %.2f%%.'\n                % (drop_mm, trans_slope)\n            )\n        main_len = main_drop / (SLOPE / 100.0)\n        return [\n            (TRANS_LEN_MM, trans_slope, 'top transition'),\n            (main_len, SLOPE, 'main ramp'),\n            (TRANS_LEN_MM, trans_slope, 'bottom transition')\n        ]\n    return [(drop_mm / (SLOPE / 100.0), SLOPE, 'main ramp')]\n\n\ndef top_face_normal(fl):\n    best = None\n    try:\n        for g in fl.get_Geometry(Options()):\n            if not hasattr(g, 'Faces'):\n                continue\n            for face in g.Faces:\n                if isinstance(face, PlanarFace) and face.FaceNormal.Z > 0.5:\n                    if best is None or face.FaceNormal.Z > best.Z:\n                        best = face.FaceNormal\n    except Exception:\n        pass\n    return best\n\n\ndef build_sloped_floor(xa, xb, y0, y1, z_high_mm, slope_pct, ftype, label, report):\n    \"\"\"Create one sloped floor strip. High end is xa; ramp falls toward +x.\"\"\"\n    length = xb - xa\n    if length <= 0 or y1 <= y0:\n        raise ValueError('Invalid geometry for %s.' % label)\n\n    z_low_mm = z_high_mm - length * slope_pct / 100.0\n    ref_level = nearest_level(z_low_mm * FT)\n    z_profile = ref_level.Elevation\n    pts = [(xa, y0), (xb, y0), (xb, y1), (xa, y1)]\n    loop = CurveLoop()\n    for i in range(4):\n        a, b = pts[i], pts[(i + 1) % 4]\n        loop.Append(Line.CreateBound(P(a[0], a[1], z_profile), P(b[0], b[1], z_profile)))\n    loops = List[CurveLoop]()\n    loops.Add(loop)\n\n    ymid = (y0 + y1) / 2.0\n    # Arrow points from low end to high end, so the floor rises along the arrow.\n    arrow = Line.CreateBound(P(xb, ymid, z_profile), P(xa, ymid, z_profile))\n    fl = Floor.Create(doc, loops, ftype.Id, ref_level.Id, False, arrow, slope_pct / 100.0)\n    doc.Regenerate()\n\n    n = top_face_normal(fl)\n    if n is None:\n        raise Exception('%s: could not find a valid upward planar face to verify slope.' % label)\n    along = n.X * DX + n.Y * DY\n    if along <= 1e-9:\n        doc.Delete(fl.Id)\n        arrow_rev = Line.CreateBound(P(xa, ymid, z_profile), P(xb, ymid, z_profile))\n        fl = Floor.Create(doc, loops, ftype.Id, ref_level.Id, False, arrow_rev, slope_pct / 100.0)\n        doc.Regenerate()\n        n = top_face_normal(fl)\n        if n is None or (n.X * DX + n.Y * DY) <= 1e-9:\n            raise Exception('%s: slope direction remains incorrect after rebuilding.' % label)\n\n    # Align the upper end of the TOP face to the target elevation.\n    bb = fl.get_BoundingBox(None)\n    if bb is None:\n        raise Exception('%s: no bounding box returned by Revit.' % label)\n    dz = z_high_mm * FT - bb.Max.Z\n    if abs(dz) > 1e-7:\n        ElementTransformUtils.MoveElement(doc, fl.Id, XYZ(0, 0, dz))\n        doc.Regenerate()\n\n    n = top_face_normal(fl)\n    if n is None or n.Z <= 0:\n        raise Exception('%s: invalid top-face normal after elevation correction.' % label)\n    measured = math.hypot(n.X, n.Y) / n.Z * 100.0\n    along = n.X * DX + n.Y * DY\n    if along <= 0:\n        raise Exception('%s: floor slopes in the wrong direction.' % label)\n    if abs(measured - slope_pct) > 0.25:\n        raise Exception('%s: measured slope %.3f%% differs from target %.3f%%.' %\n                        (label, measured, slope_pct))\n\n    bb = fl.get_BoundingBox(None)\n    report.append(\n        '%s | width %.0fmm | length %.0fmm | slope target %.2f%% / measured %.2f%% | '\n        'high-end target %.0fmm / bbox max %.0fmm'\n        % (label, y1 - y0, length, slope_pct, measured, z_high_mm, bb.Max.Z / FT)\n    )\n    return fl\n\n\n# ---------- create all ramp and curb floors inside a rollback-capable subtransaction ----------\nreport = []\ncreated_ids = List[ElementId]()\nsubtx = None\nTransactionManager.Instance.EnsureInTransaction(doc)\ntry:\n    subtx = SubTransaction(doc)\n    subtx.Start()\n\n    segs = make_segments(DROP)\n    x = 0.0\n    z_high = Z_TOP\n    curb_side_positions = [(0.0, SIDE_CURB_W),\n                           (TOTAL_WIDTH - SIDE_CURB_W, TOTAL_WIDTH)]\n    center_position = ((TOTAL_WIDTH - CENTER_CURB_W) / 2.0,\n                       (TOTAL_WIDTH + CENTER_CURB_W) / 2.0)\n\n    ramp_floors = []\n    curb_floors = []\n    for i, (length, slope, seg_label) in enumerate(segs):\n        xa, xb = x, x + length\n        fl = build_sloped_floor(\n            xa, xb, 0.0, TOTAL_WIDTH, z_high, slope, ramp_type,\n            'Ramp %d (%s)' % (i + 1, seg_label), report\n        )\n        ramp_floors.append(fl)\n        created_ids.Add(fl.Id)\n\n        # Curb top surfaces are raised above the driving surface.\n        for side_i, (y0, y1) in enumerate(curb_side_positions):\n            side_fl = build_sloped_floor(\n                xa, xb, y0, y1, z_high + SIDE_CURB_H, slope, curb_type,\n                'Side curb %d / segment %d' % (side_i + 1, i + 1), report\n            )\n            curb_floors.append(side_fl)\n            created_ids.Add(side_fl.Id)\n\n        if TRAFFIC == 'two-way' and CENTER_CURB_W > 0:\n            center_fl = build_sloped_floor(\n                xa, xb, center_position[0], center_position[1],\n                z_high + CENTER_CURB_H, slope, curb_type,\n                'Center divider / segment %d' % (i + 1), report\n            )\n            curb_floors.append(center_fl)\n            created_ids.Add(center_fl.Id)\n\n        x = xb\n        z_high -= length * slope / 100.0\n\n    # Group the ramp deck and all curb strips together.\n    group_name = 'Car Ramp %s to %s (%s)' % (lv_top.Name, lv_bot.Name, TRAFFIC)\n    grp = doc.Create.NewGroup(created_ids)\n    try:\n        grp.GroupType.Name = group_name\n    except Exception:\n        report.append('Group created; Revit did not accept the requested Group Type name (possibly duplicate).')\n\n    ramp_th = type_thickness_mm(ramp_type)\n    curb_th = type_thickness_mm(curb_type)\n    report.insert(0,\n        '%s | drop %.0fmm | total length %.2fm | traffic %s | '\n        'vehicle %s | clear lane %.0fmm | total width %.0fmm | overhead clearance target %.0fmm | ramp type \"%s\" | curb type \"%s\"'\n        % (group_name, DROP, x / 1000.0, TRAFFIC, VEHICLE_CLASS, CLEAR_LANE, TOTAL_WIDTH,\n           OVERHEAD_CLEAR_MM, ramp_type.Name, curb_type.Name)\n    )\n    report.append('Ramp Floor Type thickness: %s mm.' % ('unknown' if ramp_th is None else '%.0f' % ramp_th))\n    report.append('Curb Floor Type thickness: %s mm. Check that it matches the intended curb build-up.' %\n                  ('unknown' if curb_th is None else '%.0f' % curb_th))\n    report.append('OVERHEAD CLEARANCE TARGET: %.0fmm (verify actual underside of beams/ducts/doors in a section; this script reports the target and does not create a physical overhead element).' % OVERHEAD_CLEAR_MM)\n    if OVERHEAD_CLEAR_MM < 2200.0:\n        report.append('WARNING: overhead clearance target is below 2200mm; verify applicable code and vehicle envelope.')\n    if VEHICLE_CLASS in ('service', 'service-vehicle', 'waste', 'waste-vehicle', 'garbage', 'garbage-truck', 'refuse'):\n        report.append('Service/waste vehicle selected: clear lane automatically set to 4000mm.')\n    if curb_type_input is None:\n        report.append('Curb type was selected automatically; provide IN[9] with an exact type name or Floor Type for explicit control.')\n    if TRAFFIC == 'two-way':\n        report.append('Center divider: width %.0fmm, height %.0fmm. Code draft table appears to indicate 500mm width and <=100mm height; confirm requested 300mm width.' %\n                      (CENTER_CURB_W, CENTER_CURB_H))\n\n    subtx.Commit()\nexcept Exception as ex:\n    try:\n        if subtx is not None and subtx.GetStatus().ToString() == 'Started':\n            subtx.RollBack()\n    except Exception:\n        pass\n    raise Exception('Ramp creation failed; created elements were rolled back. Details: %s' % ex)\nfinally:\n    TransactionManager.Instance.TransactionTaskDone()\n\nend_pt = P(x, 0.0, 0.0)\nOUT = [grp, report, [end_pt.X / FT, end_pt.Y / FT]]\n",
+      "Engine": "CPython3",
+      "VariableInputPorts": true,
+      "Id": "09d737753caf4944859d2eae6109c821",
+      "NodeType": "PythonScriptNode",
+      "Inputs": [
+        {
+          "Id": "9c75dcf056044de38201fa38bae49b06",
+          "Name": "IN[0]",
+          "Description": "اكتب اسم Level الأعلى كما يظهر حرفيًا في Revit. يقبل أيضًا Level element إذا تم توصيله يدويًا.",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "e5d27c2dbaf54d7985efa379c9375ae5",
+          "Name": "IN[1]",
+          "Description": "اكتب اسم Level الأقل ارتفاعًا كما يظهر حرفيًا في Revit.",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "ecb9e89f10e44afd9bfca1e885e80cdd",
+          "Name": "IN[2]",
+          "Description": "الميل الطولي للرامب كنسبة مئوية. القيم المقبولة أكبر من 0 وحتى 15%.",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "cc2abdcb067d4f9fbbd9fd2c0ff44feb",
+          "Name": "IN[3]",
+          "Description": "عرض مسار السيارات الصافي لكل اتجاه بالملليمتر. يصبح 4000mm تلقائيًا لفئة Service أو Waste.",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "eddc0289e0514368b563f4fe54666391",
+          "Name": "IN[4]",
+          "Description": "إحداثي X لبداية الرامب في إحداثيات المشروع، بالملليمتر.",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "e7c936d7b56f49f8be47685ff4855e34",
+          "Name": "IN[5]",
+          "Description": "إحداثي Y لبداية الرامب في إحداثيات المشروع، بالملليمتر.",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "3620a9b7720d4f0d91afb46951c55a4e",
+          "Name": "IN[6]",
+          "Description": "زاوية اتجاه الرامب بالدرجات: 0 على محور +X، و90 على محور +Y.",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "6810c8c458f6492bbd115889b1a94278",
+          "Name": "IN[7]",
+          "Description": "اختياري: اكتب الاسم المطابق تمامًا لنوع الأرضية. اتركه فارغًا لاستخدام أول Floor Type متاح.",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "7779397a001d4090b9fb3811f16919f9",
+          "Name": "IN[8]",
+          "Description": "اكتب one-way أو two-way. يحدد عرض الرامب وإضافة فاصل مركزي.",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "c5ded67599ee4a30b3200d18f0d4d8c0",
+          "Name": "IN[9]",
+          "Description": "اختياري: اسم نوع أرضية البردورة. اتركه فارغًا ليختار الكود نوعًا قريب السمك من ارتفاع البردورة.",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "71ff15c6e9114dfb96097107232cdfbf",
+          "Name": "IN[10]",
+          "Description": "عرض كل بردورة جانبية بالملليمتر؛ الافتراضي 500mm.",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "64a3c2d364e54fa59264c9def6033d0c",
+          "Name": "IN[11]",
+          "Description": "عرض الفاصل الأوسط فقط في نظام two-way؛ الافتراضي 300mm حسب طلبك.",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "75746f6ed08c4f2185f94f5479e06173",
+          "Name": "IN[12]",
+          "Description": "ارتفاع سطح البردورة الجانبية فوق سطح الرامب، بالملليمتر؛ الافتراضي 150mm.",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "fe90d5fd96d4411690cb123414dfa7d5",
+          "Name": "IN[13]",
+          "Description": "ارتفاع الفاصل الأوسط فوق سطح الرامب، بالملليمتر؛ الافتراضي 100mm.",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "2b7bebb8614a40fabb01671d0918ecba",
+          "Name": "IN[14]",
+          "Description": "اكتب standard أو service أو waste. فئتا service وwaste تفرضان عرضًا صافيًا قدره 4000mm.",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "744ff7b39d994792b021a0cc526f261e",
+          "Name": "IN[15]",
+          "Description": "قيمة الخلوص الرأسي المطلوب بالملليمتر. تُكتب في التقرير فقط ولا تفحص الكمرات أو الدكتات تلقائيًا.",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "7c4e86e8120d4c5f84a026aa1d527853",
+          "Name": "OUT",
+          "Description": "Ramp group, report, endpoint",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Runs an embedded Python script."
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Watch, CoreNodeModels",
+      "WatchWidth": 49.6,
+      "WatchHeight": 220.0,
+      "Id": "0cc32eab7a7a4a4ab50bee4078d9285b",
+      "NodeType": "ExtensionNode",
+      "Inputs": [
+        {
+          "Id": "364fd43fb84d466fbcc0b8cfcf689f6e",
+          "Name": "",
+          "Description": "Node to show output from",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "44bb6c2c72df49e09da82cbc6a6d91ea",
+          "Name": "",
+          "Description": "Node output",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Visualizes a node's output"
+    },
+    {
+      "ConcreteType": "DSRevitNodesUI.Levels, DSRevitNodesUI",
+      "SelectedIndex": 6,
+      "SelectedString": "Ground",
+      "Id": "137a5cfb0b924ffe83fe1b805a38a768",
+      "NodeType": "ExtensionNode",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "bd0592b100c1451ca2cbd60c6e744a11",
+          "Name": "Levels",
+          "Description": "The selected Levels",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Select a level in the active document"
+    },
+    {
+      "ConcreteType": "DSRevitNodesUI.Levels, DSRevitNodesUI",
+      "SelectedIndex": 1,
+      "SelectedString": "B2",
+      "Id": "f9dd4fc6a3144455865d50ba885e1482",
+      "NodeType": "ExtensionNode",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "cf0f66ff05ee4ac3bc06cdb9703af449",
+          "Name": "Levels",
+          "Description": "The selected Levels",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Select a level in the active document"
+    },
+    {
+      "ConcreteType": "DSRevitNodesUI.FloorTypes, DSRevitNodesUI",
+      "SelectedIndex": 20,
+      "SelectedString": "Ramp",
+      "Id": "9951d7b5801740f7bad7c26ccdc40b52",
+      "NodeType": "ExtensionNode",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "50949421cd6f40b188cca0c842c59c37",
+          "Name": "Floor Type",
+          "Description": "The selected Floor Type",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "All floor types available in the document."
+    },
+    {
+      "ConcreteType": "DSRevitNodesUI.FloorTypes, DSRevitNodesUI",
+      "SelectedIndex": 18,
+      "SelectedString": "Grage floor",
+      "Id": "cb76a0c3f39647649e39534d108ed714",
+      "NodeType": "ExtensionNode",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "0c26f2e481954db2a78657e615fac1b6",
+          "Name": "Floor Type",
+          "Description": "The selected Floor Type",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "All floor types available in the document."
+    }
+  ],
+  "Connectors": [
+    {
+      "Start": "3ef133d00d5c450d9f5fb626ba5ca08d",
+      "End": "ecb9e89f10e44afd9bfca1e885e80cdd",
+      "Id": "be921b0fd7864de4b1ae301ffb2a60f4",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "8b921a19288545c5a25659224a46dcde",
+      "End": "cc2abdcb067d4f9fbbd9fd2c0ff44feb",
+      "Id": "fb1b10e9c29d4d4cac2b437fbee2d3d2",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "6ed17c0a785447b2a3a9584aefdf94dd",
+      "End": "eddc0289e0514368b563f4fe54666391",
+      "Id": "81d7b8b83b304b3d951eab084d604a1a",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "40cc6122bf6b4a31b91db0ab69e3d64d",
+      "End": "e7c936d7b56f49f8be47685ff4855e34",
+      "Id": "fc5ab30ef5ce49758aea4702f34aa76b",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "d0e4e6fb1ee5435dac84e5b4d4c8f880",
+      "End": "3620a9b7720d4f0d91afb46951c55a4e",
+      "Id": "63096b27c8c6418abad38da324f18e4c",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "ac7bca82b3f748348ea7cc35c59249cf",
+      "End": "7779397a001d4090b9fb3811f16919f9",
+      "Id": "c8a27c771a624810bfe2e230c560847c",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "4c1d6e7bd0e2419687e73c1d6d647d5e",
+      "End": "71ff15c6e9114dfb96097107232cdfbf",
+      "Id": "5512ed648e7249a6ad96fc5e3d54eb36",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "68b85100b364410795b2019f2cf54feb",
+      "End": "64a3c2d364e54fa59264c9def6033d0c",
+      "Id": "c4cf7e46e9e143a8aa9e28693095c069",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "4e50065305084142b4f89af7dc6ea134",
+      "End": "75746f6ed08c4f2185f94f5479e06173",
+      "Id": "8b7c9624d18c44fbb7b5f4d6ea41fba5",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "c248b5cd2b1f477ab6f20624c72ba7b3",
+      "End": "fe90d5fd96d4411690cb123414dfa7d5",
+      "Id": "d4490955ae3d47069db2669c564a978d",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "c3c71c2924e3448088377c7bda68853d",
+      "End": "2b7bebb8614a40fabb01671d0918ecba",
+      "Id": "a4994395a6844da6ad222be92e1e012c",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "98cf83497e704a53bb4862d8dd2eb53a",
+      "End": "744ff7b39d994792b021a0cc526f261e",
+      "Id": "9891149a619d4311b67dce63078f4280",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "7c4e86e8120d4c5f84a026aa1d527853",
+      "End": "364fd43fb84d466fbcc0b8cfcf689f6e",
+      "Id": "aa75f4e3a9854976a2760809fde4b6c8",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "bd0592b100c1451ca2cbd60c6e744a11",
+      "End": "9c75dcf056044de38201fa38bae49b06",
+      "Id": "cd49db23991d422490277331683b2f96",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "cf0f66ff05ee4ac3bc06cdb9703af449",
+      "End": "e5d27c2dbaf54d7985efa379c9375ae5",
+      "Id": "91c7a27d228f49eba1f452059496de9e",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "50949421cd6f40b188cca0c842c59c37",
+      "End": "6810c8c458f6492bbd115889b1a94278",
+      "Id": "428d091869ad4df385bd7a220c495793",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "0c26f2e481954db2a78657e615fac1b6",
+      "End": "c5ded67599ee4a30b3200d18f0d4d8c0",
+      "Id": "c529743724564328ad60f07352946fca",
+      "IsHidden": "False"
+    }
+  ],
+  "Dependencies": [],
+  "NodeLibraryDependencies": [],
+  "EnableLegacyPolyCurveBehavior": false,
+  "Thumbnail": "",
+  "GraphDocumentationURL": null,
+  "ExtensionWorkspaceData": [
+    {
+      "ExtensionGuid": "28992e1d-abb9-417f-8b1b-05e053bee670",
+      "Name": "Properties",
+      "Version": "3.0",
+      "Data": {}
+    },
+    {
+      "ExtensionGuid": "DFBD9CC0-DB40-457A-939E-8C8555555A9D",
+      "Name": "Generative Design",
+      "Version": "7.1",
+      "Data": {}
+    }
+  ],
+  "Author": "OpenAI",
+  "Linting": {
+    "activeLinter": "None",
+    "activeLinterId": "7b75fb44-43fd-4631-a878-29f4d5d8399a",
+    "warningCount": 0,
+    "errorCount": 0
+  },
+  "Bindings": [],
+  "View": {
+    "Dynamo": {
+      "ScaleFactor": 1.0,
+      "HasRunWithoutCrash": true,
+      "IsVisibleInDynamoLibrary": true,
+      "Version": "3.0.3.7597",
+      "RunType": "Manual",
+      "RunPeriod": "1000"
+    },
+    "Camera": {
+      "Name": "_Background Preview",
+      "EyeX": -17.0,
+      "EyeY": 24.0,
+      "EyeZ": 50.0,
+      "LookX": 12.0,
+      "LookY": -13.0,
+      "LookZ": -58.0,
+      "UpX": 0.0,
+      "UpY": 1.0,
+      "UpZ": 0.0
+    },
+    "ConnectorPins": [],
+    "NodeViews": [
+      {
+        "Id": "0c2fb539c71c486ba4e05d6d9e8383fa",
+        "Name": "IN[2] - ميل الرامب (%)",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": 0.0,
+        "Y": 330.0
+      },
+      {
+        "Id": "e9f37944dc894c808ad33db03a0fa057",
+        "Name": "IN[3] - عرض المسار الصافي (mm)",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": 0.0,
+        "Y": 495.0
+      },
+      {
+        "Id": "c281b672f525464e9f5cc7523728e4bb",
+        "Name": "IN[4] - إحداثي البداية X (mm)",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": 0.0,
+        "Y": 660.0
+      },
+      {
+        "Id": "20b23b48510e4e49bce39a51164fea4e",
+        "Name": "IN[5] - إحداثي البداية Y (mm)",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": 0.0,
+        "Y": 825.0
+      },
+      {
+        "Id": "979eff6655914fdbab9a8343eb5221f2",
+        "Name": "IN[6] - زاوية الاتجاه (°)",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": 0.0,
+        "Y": 990.0
+      },
+      {
+        "Id": "241ea61d5d6c404384f1ac32cc293d42",
+        "Name": "IN[8] - حركة السيارات",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": 473.63742303832396,
+        "Y": -2.1824538229944324
+      },
+      {
+        "Id": "9d35e08069f94f17b624084089e562a0",
+        "Name": "IN[10] - عرض البردورة الجانبية (mm)",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": 470.0,
+        "Y": 330.0
+      },
+      {
+        "Id": "005fc76219ae4d1c9f4d4b33649a398e",
+        "Name": "IN[11] - عرض الفاصل الأوسط (mm)",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": 470.0,
+        "Y": 495.0
+      },
+      {
+        "Id": "97538d35714c4f1f8b7df6355ebda202",
+        "Name": "IN[12] - ارتفاع البردورة الجانبية (mm)",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": 470.0,
+        "Y": 660.0
+      },
+      {
+        "Id": "2edb65a6ece44ee18c1c757d2b7b888e",
+        "Name": "IN[13] - ارتفاع الفاصل الأوسط (mm)",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": 470.0,
+        "Y": 825.0
+      },
+      {
+        "Id": "99a8cbeb0ced48d48907b2f5c8ccefd4",
+        "Name": "IN[14] - فئة السيارة",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": 470.0,
+        "Y": 990.0
+      },
+      {
+        "Id": "de38f0c6864540949fbf27087b7b3952",
+        "Name": "IN[15] - الخلوص العلوي المستهدف (mm)",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": 470.0,
+        "Y": 1155.0
+      },
+      {
+        "Id": "09d737753caf4944859d2eae6109c821",
+        "Name": "Python Script - إنشاء الرامب",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": 1040.0,
+        "Y": 475.0
+      },
+      {
+        "Id": "0cc32eab7a7a4a4ab50bee4078d9285b",
+        "Name": "Watch - التقرير والنتائج",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": 1450.0,
+        "Y": 475.0
+      },
+      {
+        "Id": "137a5cfb0b924ffe83fe1b805a38a768",
+        "Name": "IN[0] - اسم المستوى الأعلى",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": 1.8444440128024553,
+        "Y": -17.12590565230326
+      },
+      {
+        "Id": "f9dd4fc6a3144455865d50ba885e1482",
+        "Name": "IN[1] - اسم المستوى الأسفل",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": -0.17648412559071858,
+        "Y": 135.4541687963781
+      },
+      {
+        "Id": "9951d7b5801740f7bad7c26ccdc40b52",
+        "Name": "IN[7] - اسم Floor Type للرامب",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": 3.865238065293397,
+        "Y": 1134.602658197235
+      },
+      {
+        "Id": "cb76a0c3f39647649e39534d108ed714",
+        "Name": "IN[9] - اسم Floor Type للبردورة",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": 477.7227705680648,
+        "Y": 166.24998504900108
+      }
+    ],
+    "Annotations": [],
+    "X": 114.08025318187742,
+    "Y": -31.806566294588663,
+    "Zoom": 0.42198412021443377
+  }
+}

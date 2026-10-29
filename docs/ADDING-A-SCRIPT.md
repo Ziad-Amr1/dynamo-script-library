@@ -13,8 +13,8 @@ Pick the closest folder under `scripts/`:
 | `sheets-and-views` | Sheets, views, viewports, numbering, exports |
 | `parameters` | Parameter setup, transfer, validation, CSV/Excel data |
 | `families` | Family loading, auditing, placement, type catalogs |
-| `geometry` | Geometry analysis, transforms, placement calculations |
-| `documentation` | Schedules, reports, registers, handover data |
+| `geometry` | Geometry generation, analysis, transforms, placement calculations |
+| `documentation` | Annotations, numbering, schedules, reports, registers, handover data |
 | `utilities` | Reusable text, list, file, and data helpers |
 
 If no category fits, open an issue before adding a new category. Categories are

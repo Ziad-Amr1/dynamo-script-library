@@ -1,9 +1,11 @@
 # Documentation
 
-Tools that produce schedules, exports, reports, and other project documentation.
+Tools that produce annotations, numbering, schedules, exports, reports, and other
+project documentation.
 
 ## Belongs here
 
+- View annotation and numbering workflows, including text notes and tags.
 - Schedule creation and export.
 - PDF, Excel, CSV, and image report generation.
 - Drawing register and issue-sheet workflows.

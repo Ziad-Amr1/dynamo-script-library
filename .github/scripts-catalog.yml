@@ -26,10 +26,10 @@ categories:
     description: Loading, auditing, placing, and managing Revit families.
   - id: geometry
     name: Geometry
-    description: Geometry analysis, transformation, and interoperability helpers.
+    description: Geometry generation, analysis, transformation, and interoperability helpers.
   - id: documentation
     name: Documentation
-    description: Schedules, exports, reports, and project documentation workflows.
+    description: Annotations, numbering, schedules, exports, reports, and project documentation workflows.
   - id: utilities
     name: Utilities
     description: General-purpose helpers for lists, text, files, and data cleanup.

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import json
 import shutil
 import sys
 import tempfile
@@ -21,6 +22,7 @@ from _common import (  # noqa: E402
     LibraryError,
     discover_tools,
     is_semver,
+    iter_package_files,
     load_config,
     load_yaml,
 )
@@ -97,6 +99,10 @@ class PackagingTests(unittest.TestCase):
                 self.assertIn(f"{tool.id}/script.py", names)
                 self.assertTrue(
                     all(not name.startswith("__pycache__") for name in names)
+                )
+                self.assertTrue(
+                    all("/legacy/" not in name for name in names),
+                    "legacy files must be excluded from release packages",
                 )
 
 
@@ -196,6 +202,107 @@ class NewToolTests(unittest.TestCase):
                 ]
             )
             self.assertEqual(exit_code, 1)
+
+
+class CarRampGeneratorTests(unittest.TestCase):
+    TOOL = ROOT / "scripts" / "geometry" / "car-ramp-generator"
+    GRAPH = TOOL / "CarRampGenerator_Revit2025.dyn"
+
+    def _graph(self) -> dict:
+        return json.loads(self.GRAPH.read_text(encoding="utf-8-sig"))
+
+    def test_graph_embedded_python_matches_script(self) -> None:
+        graph = self._graph()
+        nodes = [
+            node
+            for node in graph["Nodes"]
+            if node.get("ConcreteType", "").startswith("PythonNodeModels.PythonNode")
+        ]
+        self.assertEqual(len(nodes), 1)
+        embedded = nodes[0]["Code"]
+        script = (self.TOOL / "script.py").read_text(encoding="utf-8-sig")
+        self.assertEqual(embedded, script)
+        self.assertEqual(nodes[0].get("Engine"), "CPython3")
+
+    def test_graph_has_all_sixteen_inputs_connected(self) -> None:
+        graph = self._graph()
+        python_node = next(
+            node
+            for node in graph["Nodes"]
+            if node.get("ConcreteType", "").startswith("PythonNodeModels.PythonNode")
+        )
+        self.assertEqual(len(python_node["Inputs"]), 16)
+        input_ids = {port["Id"] for port in python_node["Inputs"]}
+        connected = [c for c in graph["Connectors"] if c["End"] in input_ids]
+        self.assertEqual(len(connected), 16)
+        self.assertEqual(len({c["End"] for c in connected}), 16)
+        output_id = python_node["Outputs"][0]["Id"]
+        self.assertEqual(
+            sum(1 for c in graph["Connectors"] if c["Start"] == output_id), 1
+        )
+
+    def test_legacy_folder_is_excluded_from_packages(self) -> None:
+        _, config = load_config(ROOT)
+        tool = next(
+            item for item in discover_tools(ROOT, config) if item.id == "car-ramp-generator"
+        )
+        self.assertTrue((self.TOOL / "legacy" / "README.md").is_file())
+        packaged = {
+            path.relative_to(self.TOOL).as_posix() for path in iter_package_files(tool)
+        }
+        self.assertIn("script.py", packaged)
+        self.assertIn("CarRampGenerator_Revit2025.dyn", packaged)
+        self.assertFalse(any(name.startswith("legacy/") for name in packaged))
+
+
+class ParkingNumberingTests(unittest.TestCase):
+    TOOL = ROOT / "scripts" / "documentation" / "parking-numbering"
+    GRAPH = TOOL / "ParkingNumbering.dyn"
+
+    def _graph(self) -> dict:
+        return json.loads(self.GRAPH.read_text(encoding="utf-8"))
+
+    def test_graph_embedded_python_matches_script(self) -> None:
+        graph = self._graph()
+        python_node = next(n for n in graph["Nodes"] if n.get("Code"))
+        script = (self.TOOL / "script.py").read_text(encoding="utf-8")
+        self.assertEqual(python_node["Code"], script)
+        self.assertEqual(python_node.get("Engine"), "CPython3")
+
+    def test_cleaned_graph_has_one_visible_input(self) -> None:
+        graph = self._graph()
+        self.assertEqual(graph.get("Name"), "Parking Numbering")
+        self.assertEqual(len(graph["Nodes"]), 3)
+        self.assertEqual(len(graph["Connectors"]), 2)
+        self.assertFalse(
+            any("BoolSelector" in node.get("ConcreteType", "") for node in graph["Nodes"])
+        )
+        python_node = next(n for n in graph["Nodes"] if n.get("Code"))
+        self.assertEqual([port["Name"] for port in python_node["Inputs"]], ["IN[0]"])
+        input_ids = {port["Id"] for port in python_node["Inputs"]}
+        self.assertEqual(
+            sum(1 for c in graph["Connectors"] if c["End"] in input_ids), 1
+        )
+        double_node = next(
+            n for n in graph["Nodes"] if "DoubleInput" in n.get("ConcreteType", "")
+        )
+        view = next(
+            v for v in graph["View"]["NodeViews"] if v["Id"] == double_node["Id"]
+        )
+        self.assertEqual(view["Name"], "Start number")
+
+    def test_legacy_folder_is_excluded_from_packages(self) -> None:
+        _, config = load_config(ROOT)
+        tool = next(
+            item for item in discover_tools(ROOT, config) if item.id == "parking-numbering"
+        )
+        self.assertTrue((self.TOOL / "legacy" / "README.md").is_file())
+        packaged = {
+            path.relative_to(self.TOOL).as_posix() for path in iter_package_files(tool)
+        }
+        self.assertIn("script.py", packaged)
+        self.assertIn("ParkingNumbering.dyn", packaged)
+        self.assertFalse(any(name.startswith("legacy/") for name in packaged))
 
 
 class LinkCheckerTests(unittest.TestCase):

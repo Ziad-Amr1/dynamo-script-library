@@ -16,6 +16,10 @@ file only describes repository-level changes and coordinated releases.
 - Script catalog generation, manifest validation, ZIP packaging, and tool
   scaffolding utilities under `tools/`.
 - A working reference tool: Text Find & Replace (`scripts/utilities/text-find-replace`).
+- Car Ramp Generator (`scripts/geometry/car-ramp-generator`), imported from the
+  owner's Revit 2025 graph with the `get_Name()` fix and bilingual docs.
+- Parking Numbering (`scripts/documentation/parking-numbering`), an active-view
+  text-note numbering workflow with a cleaned single-input graph.
 - GitHub Actions for validation, catalog maintenance, package builds, and
   tag-driven releases.
 - Beginner-oriented documentation for downloading, adding tools, versioning,

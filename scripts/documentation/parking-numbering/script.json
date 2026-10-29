@@ -1,0 +1,23 @@
+{
+  "name": "Parking Numbering",
+  "id": "parking-numbering",
+  "description": "Numbers parking elements visible in the active view with centered text notes, ordered by row and starting from a chosen number.",
+  "category": "documentation",
+  "version": "0.1.0",
+  "status": "development",
+  "revit_versions": [],
+  "dynamo_versions": [],
+  "python_engine": "CPython 3",
+  "entry_points": [
+    "ParkingNumbering.dyn",
+    "script.py"
+  ],
+  "dependencies": [],
+  "tags": [
+    "parking",
+    "numbering",
+    "text-notes",
+    "annotation",
+    "active-view"
+  ]
+}

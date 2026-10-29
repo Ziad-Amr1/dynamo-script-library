@@ -1,0 +1,232 @@
+{
+  "Uuid": "8fb518fb-b0f8-4eb2-919a-d35a6dcb2da4",
+  "IsCustomNode": false,
+  "Description": "",
+  "Name": "number",
+  "ElementResolver": {
+    "ResolutionMap": {}
+  },
+  "Inputs": [],
+  "Outputs": [],
+  "Nodes": [
+    {
+      "ConcreteType": "CoreNodeModels.Input.BoolSelector, CoreNodeModels",
+      "Id": "d05cb242c4ac485d896ec949ad7e8007",
+      "NodeType": "BooleanInputNode",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "14e4808eb8a349318f0891da956b54e0",
+          "Name": "",
+          "Description": "Boolean",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Enables selection between True and False",
+      "InputValue": true
+    },
+    {
+      "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
+      "Code": "import clr\n\nclr.AddReference('RevitAPI')\nclr.AddReference('RevitServices')\n\nfrom Autodesk.Revit.DB import *\nfrom RevitServices.Persistence import DocumentManager\nfrom RevitServices.Transactions import TransactionManager\n\n\n# ============================================================\n# DOCUMENT / ACTIVE VIEW\n# ============================================================\n\ndoc = DocumentManager.Instance.CurrentDBDocument\nview = doc.ActiveView\n\n# Starting number comes from the Dynamo Number node (IN[1]).\ntry:\n    START_NUMBER = int(round(float(IN[1])))\nexcept:\n    START_NUMBER = 1\n\n\n# ============================================================\n# CONFIGURATION\n# ============================================================\n\n# START_NUMBER is provided by IN[1].\n\n# Tolerance for grouping parking spaces into the same row.\n# Revit internal units = feet.\n#\n# 1.0 ft ≈ 304.8 mm\n#\n# Increase this if one physical row is being split into\n# multiple rows.\nROW_TOLERANCE = 1.0\n\n# True:\n#   Highest Y row → lowest Y row\n#\n# False:\n#   Lowest Y row → highest Y row\nROWS_TOP_TO_BOTTOM = True\n\n# Text size in millimeters\nTEXT_SIZE_MM = 150\n\n\n# ============================================================\n# STEP 1\n# GET PARKING ELEMENTS VISIBLE IN THE ACTIVE VIEW\n# ============================================================\n\ncollector = (\n    FilteredElementCollector(doc, view.Id)\n    .OfCategory(BuiltInCategory.OST_Parking)\n    .WhereElementIsNotElementType()\n)\n\nparking_elements = list(collector.ToElements())\n\n\n# ============================================================\n# STEP 2\n# GET CENTER OF EACH PARKING\n# ============================================================\n#\n# IMPORTANT:\n# We use the Bounding Box of the parking element\n# in the ACTIVE VIEW.\n#\n# This avoids depending on the Family Origin /\n# LocationPoint being at the visual center.\n#\n\n\ndef get_center(element):\n\n    bbox = element.get_BoundingBox(view)\n\n    if bbox is None:\n        return None\n\n    center_x = (bbox.Min.X + bbox.Max.X) / 2.0\n    center_y = (bbox.Min.Y + bbox.Max.Y) / 2.0\n\n    # Use the element's bounding box Z center\n    center_z = (bbox.Min.Z + bbox.Max.Z) / 2.0\n\n    return XYZ(\n        center_x,\n        center_y,\n        center_z\n    )\n\n\n# Store parking + center point\nparking_data = []\n\nno_location = []\n\n\nfor element in parking_elements:\n\n    point = get_center(element)\n\n    if point is None:\n\n        no_location.append(\n            element.Id.IntegerValue\n        )\n\n    else:\n\n        parking_data.append({\n            \"element\": element,\n            \"point\": point\n        })\n\n\n# ============================================================\n# STEP 3\n# SORT PARKING BY Y\n# ============================================================\n\nparking_data.sort(\n    key=lambda item: item[\"point\"].Y,\n    reverse=ROWS_TOP_TO_BOTTOM\n)\n\n\n# ============================================================\n# STEP 4\n# GROUP PARKING INTO ROWS\n# ============================================================\n\nrows = []\n\ncurrent_row = []\nrow_reference_y = None\n\n\nfor item in parking_data:\n\n    y = item[\"point\"].Y\n\n    # First parking\n    if row_reference_y is None:\n\n        current_row = [item]\n        row_reference_y = y\n\n    # Same row\n    elif abs(y - row_reference_y) <= ROW_TOLERANCE:\n\n        current_row.append(item)\n\n    # New row\n    else:\n\n        rows.append(current_row)\n\n        current_row = [item]\n        row_reference_y = y\n\n\n# Add last row\nif current_row:\n    rows.append(current_row)\n\n\n# ============================================================\n# STEP 5\n# SORT EACH ROW LEFT → RIGHT\n# ============================================================\n\nfor row in rows:\n\n    row.sort(\n        key=lambda item: item[\"point\"].X\n    )\n\n\n# ============================================================\n# STEP 6\n# CREATE FINAL NUMBERING ORDER\n# ============================================================\n\nordered_parking = []\n\nfor row in rows:\n\n    ordered_parking.extend(row)\n\n\n# ============================================================\n# STEP 7\n# GET DEFAULT TEXT NOTE TYPE\n# ============================================================\n\ntext_type_id = doc.GetDefaultElementTypeId(\n    ElementTypeGroup.TextNoteType\n)\n\n\n# ============================================================\n# STEP 8\n# TEXT NOTE OPTIONS\n# ============================================================\n\ntext_options = TextNoteOptions(\n    text_type_id\n)\n\n# Center text horizontally around insertion point\ntext_options.HorizontalAlignment = (\n    HorizontalTextAlignment.Center\n)\n\n# Keep text horizontal\ntext_options.Rotation = 0\n\n\n# ============================================================\n# STEP 9\n# CONVERT TEXT SIZE\n# ============================================================\n#\n# Revit internal unit = feet\n# 1 foot = 304.8 mm\n#\n\nTEXT_SIZE_FT = TEXT_SIZE_MM / 304.8\n\n\n# ============================================================\n# STEP 10\n# CREATE TEXT NOTES\n# ============================================================\n\ncreated_notes = []\nerrors = []\n\n\nTransactionManager.Instance.EnsureInTransaction(doc)\n\n\nfor index, item in enumerate(ordered_parking):\n\n    element = item[\"element\"]\n    point = item[\"point\"]\n\n    # Example:\n    # 01\n    # 02\n    # 03\n    # ...\n    number = START_NUMBER + index\n\n    text = \"{:02d}\".format(number)\n\n\n    try:\n\n        # Create Text Note\n        note = TextNote.Create(\n            doc,\n            view.Id,\n            point,\n            text,\n            text_options\n        )\n\n\n        # Set text size\n        text_size_parameter = note.get_Parameter(\n            BuiltInParameter.TEXT_SIZE\n        )\n\n\n        if text_size_parameter is not None:\n\n            if not text_size_parameter.IsReadOnly:\n\n                text_size_parameter.Set(\n                    TEXT_SIZE_FT\n                )\n\n\n        # Store result\n        created_notes.append({\n\n            \"ParkingId\":\n                element.Id.IntegerValue,\n\n            \"Number\":\n                text,\n\n            \"TextNoteId\":\n                note.Id.IntegerValue,\n\n            \"X\":\n                point.X,\n\n            \"Y\":\n                point.Y\n\n        })\n\n\n    except Exception as e:\n\n        errors.append({\n\n            \"ParkingId\":\n                element.Id.IntegerValue,\n\n            \"Number\":\n                text,\n\n            \"Error\":\n                str(e)\n\n        })\n\n\n# Finish transaction\nTransactionManager.Instance.TransactionTaskDone()\n\n\n# ============================================================\n# OUTPUT\n# ============================================================\n\nsummary = {\n\n    \"ParkingFound\":\n        len(parking_elements),\n\n    \"ParkingWithLocation\":\n        len(parking_data),\n\n    \"RowsDetected\":\n        len(rows),\n\n    \"TextNotesCreated\":\n        len(created_notes),\n\n    \"NoLocation\":\n        len(no_location),\n\n    \"Errors\":\n        len(errors),\n\n    \"ActiveView\":\n        view.Name\n\n}\n\n\nOUT = (\n    created_notes,\n    errors,\n    no_location,\n    summary\n)",
+      "Engine": "CPython3",
+      "VariableInputPorts": true,
+      "Id": "cd1d9dcf739444a78e08bcccc34a1537",
+      "NodeType": "PythonScriptNode",
+      "Inputs": [
+        {
+          "Id": "2e4f42e604a745c58e5ffb083999c488",
+          "Name": "IN[0]",
+          "Description": "Input #0",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "794b00496b9746efb0ae4457db6f9417",
+          "Name": "IN[1]",
+          "Description": "Starting number",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "7a23a56784ef47d493f19b1a6198df55",
+          "Name": "OUT",
+          "Description": "Result of the python script",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Runs an embedded Python script."
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Watch, CoreNodeModels",
+      "WatchWidth": 200.0,
+      "WatchHeight": 200.0,
+      "Id": "76e0df6b98064d0ea1e81f9fd0951700",
+      "NodeType": "ExtensionNode",
+      "Inputs": [
+        {
+          "Id": "3c9dc119ba224926a76cb588728886cb",
+          "Name": "",
+          "Description": "Node to show output from",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "7f2543ab4282462ebe3473eb279ac60e",
+          "Name": "",
+          "Description": "Node output",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Visualizes a node's output"
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Input.DoubleInput, CoreNodeModels",
+      "NodeType": "NumberInputNode",
+      "Id": "7733e18402a7443d9088ca99fd55cde1",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "ff4b1ca4476e4864b4d879837d52c3c6",
+          "Name": "",
+          "Description": "Number",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "A number input",
+      "InputValue": "1",
+      "NumberType": "Double"
+    }
+  ],
+  "Connectors": [
+    {
+      "Start": "14e4808eb8a349318f0891da956b54e0",
+      "End": "2e4f42e604a745c58e5ffb083999c488",
+      "Id": "8b3b8c443a8b44d587ebefb8a9b866a1",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "7a23a56784ef47d493f19b1a6198df55",
+      "End": "3c9dc119ba224926a76cb588728886cb",
+      "Id": "abbab7be58ba4530bffa579b0350860a",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "ff4b1ca4476e4864b4d879837d52c3c6",
+      "End": "794b00496b9746efb0ae4457db6f9417",
+      "Id": "31cb6b6d5bc840cdb69448d70ca4bc49",
+      "IsHidden": "False"
+    }
+  ],
+  "Dependencies": [],
+  "NodeLibraryDependencies": [],
+  "EnableLegacyPolyCurveBehavior": null,
+  "Thumbnail": "",
+  "GraphDocumentationURL": null,
+  "ExtensionWorkspaceData": [
+    {
+      "ExtensionGuid": "28992e1d-abb9-417f-8b1b-05e053bee670",
+      "Name": "Properties",
+      "Version": "3.0",
+      "Data": {}
+    },
+    {
+      "ExtensionGuid": "DFBD9CC0-DB40-457A-939E-8C8555555A9D",
+      "Name": "Generative Design",
+      "Version": "7.1",
+      "Data": {}
+    }
+  ],
+  "Author": "",
+  "Linting": {
+    "activeLinter": "None",
+    "activeLinterId": "7b75fb44-43fd-4631-a878-29f4d5d8399a",
+    "warningCount": 0,
+    "errorCount": 0
+  },
+  "Bindings": [],
+  "View": {
+    "Dynamo": {
+      "ScaleFactor": 1.0,
+      "HasRunWithoutCrash": true,
+      "IsVisibleInDynamoLibrary": true,
+      "Version": "3.0.3.7597",
+      "RunType": "Manual",
+      "RunPeriod": "1000"
+    },
+    "Camera": {
+      "Name": "_Background Preview",
+      "EyeX": -17.0,
+      "EyeY": 24.0,
+      "EyeZ": 50.0,
+      "LookX": 12.0,
+      "LookY": -13.0,
+      "LookZ": -58.0,
+      "UpX": 0.0,
+      "UpY": 1.0,
+      "UpZ": 0.0
+    },
+    "ConnectorPins": [],
+    "NodeViews": [
+      {
+        "Id": "d05cb242c4ac485d896ec949ad7e8007",
+        "Name": "Boolean",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": 144.00000000000006,
+        "Y": 180.8
+      },
+      {
+        "Id": "cd1d9dcf739444a78e08bcccc34a1537",
+        "Name": "Python Script",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": 412.8000000000002,
+        "Y": 187.2
+      },
+      {
+        "Id": "76e0df6b98064d0ea1e81f9fd0951700",
+        "Name": "Watch",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "ShowGeometry": true,
+        "X": 638.4000000000001,
+        "Y": 179.19999999999987
+      }
+    ],
+    "Annotations": [],
+    "X": 0.0,
+    "Y": 0.0,
+    "Zoom": 1.0
+  }
+}

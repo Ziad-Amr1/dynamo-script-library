@@ -1,0 +1,24 @@
+{
+  "name": "Car Ramp Generator",
+  "id": "car-ramp-generator",
+  "description": "Generates sloped car ramp floors with side and center curbs in Revit 2025, then groups the created elements.",
+  "category": "geometry",
+  "version": "0.1.0",
+  "status": "development",
+  "revit_versions": [],
+  "dynamo_versions": [],
+  "python_engine": "CPython 3",
+  "entry_points": [
+    "CarRampGenerator_Revit2025.dyn",
+    "script.py"
+  ],
+  "dependencies": [],
+  "tags": [
+    "ramp",
+    "floors",
+    "curbs",
+    "parking",
+    "geometry",
+    "revit-2025"
+  ]
+}
