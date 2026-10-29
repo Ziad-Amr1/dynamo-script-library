@@ -10,6 +10,8 @@ file only describes repository-level changes and coordinated releases.
 
 ## [Unreleased]
 
+## [0.1.0] - 2026-10-29
+
 ### Added
 
 - Initial repository scaffold with a scalable `scripts/` category structure.
@@ -27,4 +29,5 @@ file only describes repository-level changes and coordinated releases.
 - Issue templates, pull request template, security policy, and contribution
   guidelines.
 
-[Unreleased]: https://github.com/Ziad-Amr1/dynamo-script-library/commits/main
+[Unreleased]: https://github.com/Ziad-Amr1/dynamo-script-library/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/Ziad-Amr1/dynamo-script-library/releases/tag/v0.1.0

@@ -11,6 +11,7 @@ developers can find, download, run, and maintain them.
 
 - [Overview](#overview)
 - [Quick start for non-technical users](#quick-start-for-non-technical-users)
+- [Releases and downloads](#releases-and-downloads)
 - [Tool catalog](#tool-catalog)
 - [Repository structure](#repository-structure)
 - [Compatibility and requirements](#compatibility-and-requirements)
@@ -45,9 +46,10 @@ What you will find here:
 - Reusable resources, examples, templates, and contribution tooling.
 - Documentation covering installation, downloading, versioning, and releases.
 
-> **Status:** this repository is in its initial scaffolding phase. Only tools
-> whose README explicitly states verified compatibility should be assumed to
-> work with a given Revit and Dynamo version.
+> **Status:** this repository is at development snapshot `v0.1.0`. None of the
+> tools has been verified in a live Revit session yet. Only tools whose README
+> explicitly states verified compatibility should be assumed to work with a
+> given Revit and Dynamo version.
 
 ## Quick start for non-technical users
 
@@ -65,6 +67,31 @@ What you will find here:
 
 More detail, including how to download a single tool or a versioned release, is
 in [docs/DOWNLOADING.md](docs/DOWNLOADING.md).
+
+## Releases and downloads
+
+**Current release: [v0.1.0](https://github.com/Ziad-Amr1/dynamo-script-library/releases/tag/v0.1.0)**
+(2026-10-29). Download a ready-to-extract ZIP directly; Git is not required.
+
+| Tool | Version | Direct download | Compatibility |
+| --- | --- | --- | --- |
+| Text Find & Replace | `0.1.0` | [Download ZIP](https://github.com/Ziad-Amr1/dynamo-script-library/releases/download/v0.1.0/text-find-replace-v0.1.0.zip) | CPython 3.8+; no Revit API dependency; not verified in Revit |
+| Car Ramp Generator | `0.1.0` | [Download ZIP](https://github.com/Ziad-Amr1/dynamo-script-library/releases/download/v0.1.0/car-ramp-generator-v0.1.0.zip) | Built for Revit 2025 / Dynamo 3 / CPython 3; not verified in Revit |
+| Parking Numbering | `0.1.0` | [Download ZIP](https://github.com/Ziad-Amr1/dynamo-script-library/releases/download/v0.1.0/parking-numbering-v0.1.0.zip) | Built for Revit 2025 / Dynamo 3 / CPython 3; not verified in Revit |
+
+Each ZIP extracts to one folder and includes the tool's `.dyn` and/or `script.py`,
+README, changelog, manifest, and package manifest. No Dynamo packages are
+required. Files under `legacy/` are excluded.
+
+- [GitHub Releases page](https://github.com/Ziad-Amr1/dynamo-script-library/releases)
+- [All v0.1.0 assets](https://github.com/Ziad-Amr1/dynamo-script-library/releases/tag/v0.1.0)
+- [SHA-256 checksums](https://github.com/Ziad-Amr1/dynamo-script-library/releases/download/v0.1.0/SHA256SUMS.txt)
+- [Package index](https://github.com/Ziad-Amr1/dynamo-script-library/releases/download/v0.1.0/index.json)
+- [v0.1.0 release notes](docs/releases/v0.1.0.md)
+
+Download the ZIP, extract it to a permanent folder, open the included
+`README.md`, and test the tool on a copy of the model. Do not run a graph from
+inside the ZIP archive.
 
 ## Tool catalog
 
@@ -162,7 +189,7 @@ the graph.
 | I need... | Best option |
 | --- | --- |
 | The whole library | [Download the repository ZIP](https://github.com/Ziad-Amr1/dynamo-script-library/archive/refs/heads/main.zip). |
-| One versioned tool package | Open the [Releases](https://github.com/Ziad-Amr1/dynamo-script-library/releases) page and download the tool ZIP asset. |
+| One versioned tool package | Use the [Releases and downloads](#releases-and-downloads) table above. |
 | A single file | Open the file on GitHub and use the **Download raw file** button. |
 | A stable snapshot with notes | Download a release instead of the moving `main` branch. |
 
