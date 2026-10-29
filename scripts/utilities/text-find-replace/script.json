@@ -1,0 +1,21 @@
+{
+  "name": "Text Find & Replace",
+  "id": "text-find-replace",
+  "description": "Bulk literal or regex find-and-replace for lists of strings used in Dynamo and Revit workflows.",
+  "category": "utilities",
+  "version": "0.1.0",
+  "status": "development",
+  "revit_versions": [],
+  "dynamo_versions": [],
+  "python_engine": "CPython 3",
+  "entry_points": [
+    "script.py"
+  ],
+  "dependencies": [],
+  "tags": [
+    "text",
+    "rename",
+    "parameters",
+    "regex"
+  ]
+}
