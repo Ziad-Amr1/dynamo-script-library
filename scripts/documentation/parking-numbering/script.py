@@ -3,13 +3,13 @@
 
 INPUT
     IN[0] Starting number (rounded to the nearest integer; fallback 1)
+    IN[1] Renumber existing labels (bool, default False: safe skip mode)
 
 OUTPUT
-    OUT[0] Created text-note records
+    OUT[0] Numbered text-note records (created and updated)
     OUT[1] Per-element errors
-    OUT[2] Parking element IDs without a bounding box
-    OUT[3] Summary dictionary, including spaces skipped because existing text
-         overlaps the parking bounding box
+    OUT[2] Parking element IDs without a bounding box / usable location
+    OUT[3] Summary dictionary (counts, skipped items, settings)
 
 Target: Revit 2025 / Dynamo 3 / CPython 3.
 """
@@ -32,42 +32,40 @@ from RevitServices.Transactions import TransactionManager
 doc = DocumentManager.Instance.CurrentDBDocument
 view = doc.ActiveView
 
-# Starting number comes from the Dynamo Number node (IN[0]).
+# Starting number comes from IN[0] (fallback 1)
 try:
     START_NUMBER = int(round(float(IN[0])))
 except Exception:
     START_NUMBER = 1
+
+# Renumber existing mode comes from IN[1] (fallback False: safe skip mode)
+try:
+    RENUMBER_EXISTING = bool(IN[1])
+except Exception:
+    RENUMBER_EXISTING = False
 
 
 # ============================================================
 # CONFIGURATION
 # ============================================================
 
-# START_NUMBER is provided by IN[0].
-
-# Tolerance for grouping parking spaces into the same row.
-# Revit internal units = feet.
-#
-# 1.0 ft ≈ 304.8 mm
-#
-# Increase this if one physical row is being split into
-# multiple rows.
+# Tolerance for grouping parking spaces into the same row (Revit feet; 1.0 ft ≈ 304.8 mm)
 ROW_TOLERANCE = 1.0
 
-# True:
-#   Highest Y row → lowest Y row
-#
-# False:
-#   Lowest Y row → highest Y row
+# True: Highest Y row → lowest Y row; False: Lowest Y row → highest Y row
 ROWS_TOP_TO_BOTTOM = True
 
 # Text size in millimeters
 TEXT_SIZE_MM = 150
 
+# Maximum distance (in Revit internal feet) to associate an existing text note
+# with a parking space center (~3.5 ft ≈ 1.07 m). This strictly isolates each
+# stall's label and prevents matching adjacent angled bays (spaced >= 7.5 ft).
+ASSOCIATION_RADIUS_FT = 3.5
+
 
 # ============================================================
-# STEP 1
-# GET PARKING ELEMENTS VISIBLE IN THE ACTIVE VIEW
+# STEP 1: GET PARKING ELEMENTS VISIBLE IN THE ACTIVE VIEW
 # ============================================================
 
 collector = (
@@ -80,19 +78,8 @@ parking_elements = list(collector.ToElements())
 
 
 # ============================================================
-# STEP 2
-# GET CENTER OF EACH PARKING
+# STEP 2: HELPER FUNCTIONS & GEOMETRIC CENTER
 # ============================================================
-#
-# IMPORTANT:
-# We use the Bounding Box of the parking element
-# transformed to model coordinates.
-#
-# This computes the true geometric center for rotated/oriented
-# parking spaces and avoids depending on the Family Origin /
-# LocationPoint being at the visual center.
-#
-
 
 def get_bbox_corners(bbox):
     """Return all eight bounding-box corners in model coordinates."""
@@ -109,14 +96,13 @@ def get_bbox_corners(bbox):
                 try:
                     corners.append(transform.OfPoint(local_point))
                 except Exception:
-                    # Defensive fallback for unusual/invalid transforms.
                     corners.append(local_point)
 
     return corners
 
 
 def get_center(element):
-    """Get the center of the element's bounding box with fallbacks."""
+    """Get the geometric center of the element with safe fallbacks."""
     bbox = element.get_BoundingBox(view)
 
     if bbox is None:
@@ -144,40 +130,18 @@ def get_center(element):
     return None
 
 
-def get_axis_aligned_bounds(bbox):
-    """Return model-coordinate min/max bounds for a BoundingBoxXYZ."""
-    corners = get_bbox_corners(bbox)
-
-    if not corners:
-        return None
-
-    return (
-        min(p.X for p in corners),
-        min(p.Y for p in corners),
-        min(p.Z for p in corners),
-        max(p.X for p in corners),
-        max(p.Y for p in corners),
-        max(p.Z for p in corners)
-    )
-
-
-def bounds_overlap(a, b, tolerance=0.0):
-    """Check whether two axis-aligned bounds overlap."""
-    if a is None or b is None:
-        return False
-
-    # Compare XY only: TextNotes live in the active view plane, and their
-    # bounding-box Z range may not match the parking family's model Z range.
-    return not (
-        a[3] < b[0] - tolerance or b[3] < a[0] - tolerance or
-        a[4] < b[1] - tolerance or b[4] < a[1] - tolerance
-    )
+def point_distance(p1, p2):
+    """Euclidean distance between two XYZ points in model coordinates."""
+    dx = p1.X - p2.X
+    dy = p1.Y - p2.Y
+    dz = p1.Z - p2.Z
+    return (dx * dx + dy * dy + dz * dz) ** 0.5
 
 
 def is_numbering_text(text):
     """Return True if text appears to be a parking number annotation.
     
-    Identifies numeric labels (e.g. '01', '1', '99', '100', 'P-01', '#1')
+    Identifies numeric labels (e.g. '01', '1', '99', '100', 'P-01', '#1', 'Bay 12')
     while ignoring unrelated descriptive text (e.g. 'RESERVED', 'EV ONLY',
     'DO NOT BLOCK', 'ACCESSIBLE').
     """
@@ -193,9 +157,10 @@ def is_numbering_text(text):
     return False
 
 
-# Snapshot existing text notes in the active view BEFORE creating anything.
-# This makes repeated runs non-destructive: spaces already containing a
-# numbering note are skipped rather than receiving duplicate overlapping notes.
+# ============================================================
+# STEP 3: SNAPSHOT EXISTING TEXT NOTES IN ACTIVE VIEW
+# ============================================================
+
 existing_text_notes = list(
     FilteredElementCollector(doc, view.Id)
     .OfClass(TextNote)
@@ -203,324 +168,226 @@ existing_text_notes = list(
     .ToElements()
 )
 
-existing_text_bounds = []
+existing_number_notes = []
 for existing_note in existing_text_notes:
     try:
-        note_bbox = existing_note.get_BoundingBox(view)
-        note_bounds = get_axis_aligned_bounds(note_bbox)
-        if note_bounds is not None:
-            try:
-                note_text = existing_note.Text
-            except Exception:
-                note_text = ""
-            existing_text_bounds.append({
-                "id": existing_note.Id.IntegerValue,
-                "bounds": note_bounds,
-                "text": note_text
-            })
+        note_text = existing_note.Text
+        if is_numbering_text(note_text):
+            loc_pt = getattr(existing_note, "Coord", None)
+            if loc_pt is None:
+                note_bbox = existing_note.get_BoundingBox(view)
+                if note_bbox is not None:
+                    corners = get_bbox_corners(note_bbox)
+                    if corners:
+                        loc_pt = XYZ(
+                            sum(p.X for p in corners) / float(len(corners)),
+                            sum(p.Y for p in corners) / float(len(corners)),
+                            sum(p.Z for p in corners) / float(len(corners))
+                        )
+            if loc_pt is not None:
+                existing_number_notes.append({
+                    "id": existing_note.Id.IntegerValue,
+                    "element": existing_note,
+                    "point": loc_pt,
+                    "text": str(note_text).strip()
+                })
     except Exception:
         pass
 
 
-# Store parking + center point
-parking_data = []
+# ============================================================
+# STEP 4: COLLECT PARKING CENTERS & SORT
+# ============================================================
 
+parking_data = []
 no_location = []
 
-
 for element in parking_elements:
-
     point = get_center(element)
-
     if point is None:
-
-        no_location.append(
-            element.Id.IntegerValue
-        )
-
+        no_location.append(element.Id.IntegerValue)
     else:
-
         parking_data.append({
             "element": element,
             "point": point
         })
 
-
-# ============================================================
-# STEP 3
-# SORT PARKING BY Y
-# ============================================================
-
+# Sort parking by Y
 parking_data.sort(
     key=lambda item: item["point"].Y,
     reverse=ROWS_TOP_TO_BOTTOM
 )
 
-
-# ============================================================
-# STEP 4
-# GROUP PARKING INTO ROWS
-# ============================================================
-
+# Group parking into rows
 rows = []
-
 current_row = []
 row_reference_y = None
 
-
 for item in parking_data:
-
     y = item["point"].Y
-
-    # First parking
     if row_reference_y is None:
-
         current_row = [item]
         row_reference_y = y
-
-    # Same row
     elif abs(y - row_reference_y) <= ROW_TOLERANCE:
-
         current_row.append(item)
-
-    # New row
     else:
-
         rows.append(current_row)
-
         current_row = [item]
         row_reference_y = y
 
-
-# Add last row
 if current_row:
     rows.append(current_row)
 
-
-# ============================================================
-# STEP 5
-# SORT EACH ROW LEFT → RIGHT
-# ============================================================
-
+# Sort each row left to right (by X)
 for row in rows:
-
-    row.sort(
-        key=lambda item: item["point"].X
-    )
-
-
-# ============================================================
-# STEP 6
-# CREATE FINAL NUMBERING ORDER
-# ============================================================
+    row.sort(key=lambda item: item["point"].X)
 
 ordered_parking = []
-
 for row in rows:
-
     ordered_parking.extend(row)
 
 
 # ============================================================
-# STEP 7
-# GET DEFAULT TEXT NOTE TYPE
+# STEP 5: PREPARE TEXT OPTIONS & SIZE
 # ============================================================
 
-text_type_id = doc.GetDefaultElementTypeId(
-    ElementTypeGroup.TextNoteType
-)
-
-
-# ============================================================
-# STEP 8
-# TEXT NOTE OPTIONS
-# ============================================================
-
-text_options = TextNoteOptions(
-    text_type_id
-)
-
-# Center text horizontally around insertion point
-text_options.HorizontalAlignment = (
-    HorizontalTextAlignment.Center
-)
-
-# Keep text horizontal
+text_type_id = doc.GetDefaultElementTypeId(ElementTypeGroup.TextNoteType)
+text_options = TextNoteOptions(text_type_id)
+text_options.HorizontalAlignment = HorizontalTextAlignment.Center
 text_options.Rotation = 0
-
-
-# ============================================================
-# STEP 9
-# CONVERT TEXT SIZE
-# ============================================================
-#
-# Revit internal unit = feet
-# 1 foot = 304.8 mm
-#
 
 TEXT_SIZE_FT = TEXT_SIZE_MM / 304.8
 
 
 # ============================================================
-# STEP 10
-# CREATE TEXT NOTES
+# STEP 6: NUMBER PARKING SPACES
 # ============================================================
 
 created_notes = []
-errors = []
+updated_notes = []
 skipped_existing_text = []
-
+errors = []
+used_note_ids = set()
+assigned_count = 0
 
 TransactionManager.Instance.EnsureInTransaction(doc)
 
-
-for index, item in enumerate(ordered_parking):
-
+for item in ordered_parking:
     element = item["element"]
     point = item["point"]
 
-    # Skip a parking space if an existing numbering note overlaps its bounding box.
-    # This prevents duplicate numbering upon re-running while preserving existing notes.
-    # Unrelated descriptive annotations (e.g. 'RESERVED', 'EV ONLY') do not cause
-    # the space to be skipped.
-    try:
-        parking_bbox = element.get_BoundingBox(view)
-        if parking_bbox is None:
-            parking_bbox = element.get_BoundingBox(None)
-        parking_bounds = get_axis_aligned_bounds(parking_bbox)
-    except Exception:
-        parking_bounds = None
+    # Associate closest existing numbering note within the stall's radius
+    matched_note = None
+    min_dist = ASSOCIATION_RADIUS_FT
+    for candidate in existing_number_notes:
+        if candidate["id"] not in used_note_ids:
+            d = point_distance(point, candidate["point"])
+            if d < min_dist:
+                min_dist = d
+                matched_note = candidate
 
-    conflicting_note_ids = []
-    if parking_bounds is not None:
-        for existing_note in existing_text_bounds:
-            if bounds_overlap(parking_bounds, existing_note["bounds"]):
-                if is_numbering_text(existing_note.get("text", "")):
-                    conflicting_note_ids.append(existing_note["id"])
-
-    if conflicting_note_ids:
+    # Safe skip mode: preserve existing note without consuming a number
+    if matched_note is not None and not RENUMBER_EXISTING:
+        used_note_ids.add(matched_note["id"])
         skipped_existing_text.append({
             "ParkingId": element.Id.IntegerValue,
-            "ExistingTextNoteIds": conflicting_note_ids
+            "ExistingTextNoteId": matched_note["id"],
+            "ExistingText": matched_note["text"],
+            "Reason": "existing_label_present"
         })
         continue
 
-    # Example:
-    # 01
-    # 02
-    # 03
-    # ...
-    number = START_NUMBER + index
-
+    # Allocate the next sequential number (never skips numbers for skipped spaces)
+    number = START_NUMBER + assigned_count
     text = "{:02d}".format(number)
 
+    if matched_note is not None and RENUMBER_EXISTING:
+        # Renumbering mode: update existing note in-place
+        try:
+            note_elem = matched_note["element"]
+            note_elem.Text = text
+            try:
+                note_elem.Coord = point
+            except Exception:
+                pass
+            try:
+                param = note_elem.get_Parameter(BuiltInParameter.TEXT_SIZE)
+                if param is not None and not param.IsReadOnly:
+                    param.Set(TEXT_SIZE_FT)
+            except Exception:
+                pass
 
-    try:
+            used_note_ids.add(matched_note["id"])
+            updated_notes.append({
+                "ParkingId": element.Id.IntegerValue,
+                "Number": text,
+                "TextNoteId": matched_note["id"],
+                "X": point.X,
+                "Y": point.Y,
+                "Action": "Updated"
+            })
+            assigned_count += 1
+        except Exception as e:
+            errors.append({
+                "ParkingId": element.Id.IntegerValue,
+                "Number": text,
+                "Error": str(e)
+            })
+    else:
+        # Create a new text note
+        try:
+            note = TextNote.Create(doc, view.Id, point, text, text_options)
+            try:
+                param = note.get_Parameter(BuiltInParameter.TEXT_SIZE)
+                if param is not None and not param.IsReadOnly:
+                    param.Set(TEXT_SIZE_FT)
+            except Exception:
+                pass
 
-        # Create Text Note
-        note = TextNote.Create(
-            doc,
-            view.Id,
-            point,
-            text,
-            text_options
-        )
+            created_notes.append({
+                "ParkingId": element.Id.IntegerValue,
+                "Number": text,
+                "TextNoteId": note.Id.IntegerValue,
+                "X": point.X,
+                "Y": point.Y,
+                "Action": "Created"
+            })
+            assigned_count += 1
+        except Exception as e:
+            errors.append({
+                "ParkingId": element.Id.IntegerValue,
+                "Number": text,
+                "Error": str(e)
+            })
 
-
-        # Set text size
-        text_size_parameter = note.get_Parameter(
-            BuiltInParameter.TEXT_SIZE
-        )
-
-
-        if text_size_parameter is not None:
-
-            if not text_size_parameter.IsReadOnly:
-
-                text_size_parameter.Set(
-                    TEXT_SIZE_FT
-                )
-
-
-        # Store result
-        created_notes.append({
-
-            "ParkingId":
-                element.Id.IntegerValue,
-
-            "Number":
-                text,
-
-            "TextNoteId":
-                note.Id.IntegerValue,
-
-            "X":
-                point.X,
-
-            "Y":
-                point.Y
-
-        })
-
-
-    except Exception as e:
-
-        errors.append({
-
-            "ParkingId":
-                element.Id.IntegerValue,
-
-            "Number":
-                text,
-
-            "Error":
-                str(e)
-
-        })
-
-
-# Finish transaction
 TransactionManager.Instance.TransactionTaskDone()
 
 
 # ============================================================
-# OUTPUT
+# STEP 7: ASSEMBLE OUTPUT
 # ============================================================
 
+# All numbered records (created and updated)
+numbered_notes = created_notes + updated_notes
+
 summary = {
-
-    "ParkingFound":
-        len(parking_elements),
-
-    "ParkingWithLocation":
-        len(parking_data),
-
-    "RowsDetected":
-        len(rows),
-
-    "TextNotesCreated":
-        len(created_notes),
-
-    "SkippedExistingText":
-        len(skipped_existing_text),
-
-    "ExistingTextConflicts":
-        skipped_existing_text,
-
-    "NoLocation":
-        len(no_location),
-
-    "Errors":
-        len(errors),
-
-    "ActiveView":
-        view.Name
-
+    "ParkingFound": len(parking_elements),
+    "ParkingWithLocation": len(parking_data),
+    "RowsDetected": len(rows),
+    "TextNotesCreated": len(created_notes),
+    "TextNotesUpdated": len(updated_notes),
+    "TotalNumbered": len(numbered_notes),
+    "SkippedExistingText": len(skipped_existing_text),
+    "ExistingTextConflicts": skipped_existing_text,
+    "NoLocation": len(no_location),
+    "Errors": len(errors),
+    "ActiveView": view.Name,
+    "StartNumber": START_NUMBER,
+    "RenumberExisting": RENUMBER_EXISTING
 }
 
-
 OUT = (
-    created_notes,
+    numbered_notes,
     errors,
     no_location,
     summary

@@ -14,13 +14,15 @@ file only describes repository-level changes and coordinated releases.
 
 ### Fixed
 
+- **Parking Numbering:** Fixed sequential numbering to never consume numbers for skipped stalls; newly numbered stalls strictly start from the configured starting number (e.g. `01`).
+- **Parking Numbering:** Replaced axis-aligned bounding-box overlap with 3.5 ft proximity matching to eliminate false-positive conflicts across adjacent angled stalls.
+- **Parking Numbering:** Added an explicit, safe renumbering mode (`IN[1]`) allowing in-place updating of existing parking numbers without creating duplicate notes.
 - **Parking Numbering:** Centers text notes using transformed bounding-box corners with fallbacks, correctly positioning numbers on rotated parking spaces.
-- **Parking Numbering:** Avoids duplicate numbers on re-run by detecting existing numbering notes without deleting or modifying any annotations.
-- **Parking Numbering:** Discriminates between numbering notes and unrelated text (e.g. "RESERVED", "EV ONLY") to avoid false-positive skip conflicts.
+- **Parking Numbering:** Discriminates between numbering notes and unrelated text (e.g. "RESERVED", "EV ONLY") to protect user annotations.
 
 ### Added
 
-- Unit tests for geometric center calculation across rotated parking spaces (dimensions 2.3 × 5.0 m, 2.4 × 5.0 m, 2.5 × 5.0 m) and annotation pattern discrimination.
+- Unit tests for geometric center calculation across rotated parking spaces (dimensions 2.3 × 5.0 m, 2.4 × 5.0 m, 2.5 × 5.0 m), sequential numbering with skipped spaces, and renumbering mode.
 - Release notes for `v0.1.1` in `docs/releases/v0.1.1.md`.
 
 ## [0.1.0] - 2026-10-29

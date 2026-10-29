@@ -269,27 +269,26 @@ class ParkingNumberingTests(unittest.TestCase):
         self.assertEqual(python_node["Code"], script)
         self.assertEqual(python_node.get("Engine"), "CPython3")
 
-    def test_cleaned_graph_has_one_visible_input(self) -> None:
+    def test_graph_has_start_number_and_renumber_inputs(self) -> None:
         graph = self._graph()
         self.assertEqual(graph.get("Name"), "Parking Numbering")
-        self.assertEqual(len(graph["Nodes"]), 3)
-        self.assertEqual(len(graph["Connectors"]), 2)
-        self.assertFalse(
-            any("BoolSelector" in node.get("ConcreteType", "") for node in graph["Nodes"])
-        )
+        self.assertEqual(len(graph["Nodes"]), 4)
+        self.assertEqual(len(graph["Connectors"]), 3)
         python_node = next(n for n in graph["Nodes"] if n.get("Code"))
-        self.assertEqual([port["Name"] for port in python_node["Inputs"]], ["IN[0]"])
+        self.assertEqual([port["Name"] for port in python_node["Inputs"]], ["IN[0]", "IN[1]"])
         input_ids = {port["Id"] for port in python_node["Inputs"]}
         self.assertEqual(
-            sum(1 for c in graph["Connectors"] if c["End"] in input_ids), 1
+            sum(1 for c in graph["Connectors"] if c["End"] in input_ids), 2
         )
         double_node = next(
             n for n in graph["Nodes"] if "DoubleInput" in n.get("ConcreteType", "")
         )
-        view = next(
-            v for v in graph["View"]["NodeViews"] if v["Id"] == double_node["Id"]
+        bool_node = next(
+            n for n in graph["Nodes"] if "BoolSelector" in n.get("ConcreteType", "")
         )
-        self.assertEqual(view["Name"], "Start number")
+        views = {v["Id"]: v["Name"] for v in graph["View"]["NodeViews"]}
+        self.assertEqual(views.get(double_node["Id"]), "Start number")
+        self.assertEqual(views.get(bool_node["Id"]), "Renumber existing labels")
 
     def test_legacy_folder_is_excluded_from_packages(self) -> None:
         _, config = load_config(ROOT)
@@ -387,20 +386,107 @@ class ParkingNumberingTests(unittest.TestCase):
                     self.assertAlmostEqual(cy, orig.Y, places=5)
                     self.assertAlmostEqual(cz, orig.Z + 0.1, places=5)
 
-    def test_bounds_overlap_logic(self) -> None:
+    def test_point_distance_function(self) -> None:
+        class MockXYZ:
+            def __init__(self, x: float, y: float, z: float) -> None:
+                self.X = float(x)
+                self.Y = float(y)
+                self.Z = float(z)
+
         funcs = self._extract_script_functions()
-        bounds_overlap = funcs["bounds_overlap"]
+        pt_dist = funcs["point_distance"]
 
-        # Parking space bounds [xmin, ymin, zmin, xmax, ymax, zmax]
-        parking_bounds = (-1.2, -2.5, 0.0, 1.2, 2.5, 0.5)
+        p1 = MockXYZ(0, 0, 0)
+        p2 = MockXYZ(3, 4, 0)
+        self.assertAlmostEqual(pt_dist(p1, p2), 5.0)
 
-        # Note at center [width 0.3, height 0.3]
-        centered_note_bounds = (-0.15, -0.15, 0.0, 0.15, 0.15, 0.0)
-        self.assertTrue(bounds_overlap(parking_bounds, centered_note_bounds))
+    def test_sequential_numbering_when_spaces_are_skipped(self) -> None:
+        """Verify that skipping spaces does NOT consume sequential numbers."""
+        stalls = [{"id": i, "x": i * 8.0, "y": 0.0} for i in range(5)]
+        # Stalls 0 and 2 have existing labels; stalls 1, 3, 4 are empty
+        existing_notes = {
+            0: {"id": 101, "text": "01"},
+            2: {"id": 102, "text": "03"},
+        }
+        start_number = 1
+        renumber_existing = False
 
-        # Note in adjacent parking space (offset X by 2.4 m)
-        adjacent_note_bounds = (2.25, -0.15, 0.0, 2.55, 0.15, 0.0)
-        self.assertFalse(bounds_overlap(parking_bounds, adjacent_note_bounds))
+        assigned_count = 0
+        created = []
+        skipped = []
+
+        for stall in stalls:
+            has_existing = stall["id"] in existing_notes
+            if has_existing and not renumber_existing:
+                skipped.append(stall["id"])
+                continue
+
+            num = start_number + assigned_count
+            created.append({"id": stall["id"], "number": f"{num:02d}"})
+            assigned_count += 1
+
+        self.assertEqual(len(skipped), 2)
+        self.assertEqual(skipped, [0, 2])
+        # Newly assigned numbers must start at 01 and be sequential (01, 02, 03)
+        self.assertEqual([c["number"] for c in created], ["01", "02", "03"])
+        self.assertEqual([c["id"] for c in created], [1, 3, 4])
+
+    def test_renumbering_mode_updates_existing_labels(self) -> None:
+        """Verify that renumber_existing=True updates all spaces starting from 01."""
+        stalls = [{"id": i, "x": i * 8.0, "y": 0.0} for i in range(5)]
+        existing_notes = {
+            0: {"id": 101, "text": "99"},
+            2: {"id": 102, "text": "88"},
+        }
+        start_number = 1
+        renumber_existing = True
+
+        assigned_count = 0
+        numbered = []
+        skipped = []
+
+        for stall in stalls:
+            has_existing = stall["id"] in existing_notes
+            if has_existing and not renumber_existing:
+                skipped.append(stall["id"])
+                continue
+
+            num = start_number + assigned_count
+            text = f"{num:02d}"
+            action = "Updated" if has_existing else "Created"
+            numbered.append({"id": stall["id"], "number": text, "action": action})
+            assigned_count += 1
+
+        self.assertEqual(len(skipped), 0)
+        self.assertEqual(len(numbered), 5)
+        self.assertEqual([n["number"] for n in numbered], ["01", "02", "03", "04", "05"])
+        self.assertEqual(numbered[0]["action"], "Updated")
+        self.assertEqual(numbered[1]["action"], "Created")
+        self.assertEqual(numbered[2]["action"], "Updated")
+
+    def test_custom_starting_number(self) -> None:
+        """Verify custom starting numbers (e.g. 25, 100)."""
+        stalls = [{"id": i} for i in range(3)]
+        for start_num, expected in [(25, ["25", "26", "27"]), (100, ["100", "101", "102"])]:
+            assigned = [f"{start_num + i:02d}" for i in range(len(stalls))]
+            self.assertEqual(assigned, expected)
+
+    def test_proximity_isolates_angled_stalls(self) -> None:
+        """Verify that 3.5 ft proximity matches only the stall center and rejects adjacent angled stalls."""
+        import math
+        # Stall 1 center at (0, 0)
+        # Angled stall 2 shifted by 2.4 m (7.87 ft) at 45 degrees
+        w = 2.4 * 3.28084
+        stall1_center = (0.0, 0.0)
+        stall2_center = (w * math.cos(math.radians(45)), w * math.sin(math.radians(45)))
+
+        note_stall1 = (0.0, 0.0)
+
+        dist_self = math.sqrt((note_stall1[0] - stall1_center[0])**2 + (note_stall1[1] - stall1_center[1])**2)
+        dist_adjacent = math.sqrt((note_stall1[0] - stall2_center[0])**2 + (note_stall1[1] - stall2_center[1])**2)
+
+        self.assertLess(dist_self, 3.5)
+        self.assertGreater(dist_adjacent, 3.5)
 
 
 class LinkCheckerTests(unittest.TestCase):

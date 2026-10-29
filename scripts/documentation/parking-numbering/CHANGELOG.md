@@ -11,12 +11,17 @@ and this tool follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html)
 
 ### Fixed
 
+- **Sequential numbering without gap consumption:** When existing spaces are skipped, sequential number allocation is not advanced; newly numbered spaces start strictly from the configured starting number (e.g. `01`).
+- **Angled bay label association:** Associates existing numbering notes via proximity to each stall center (3.5 ft radius), eliminating false-positive overlaps caused by axis-aligned bounding boxes on adjacent angled stalls.
 - **Geometric center placement:** Centers the number using transformed bounding-box corners (with safe fallbacks), improving placement for rotated/oriented parking spaces and varying dimensions.
-- **Non-destructive duplicate/overlap handling:** Scans existing text notes in the active view before creation; parking spaces already containing a numbering text note are skipped to prevent duplicate numbering on re-run. Unrelated descriptive text (e.g. "RESERVED", "EV ONLY") is not treated as a parking number and does not cause spaces to be skipped. No existing annotations are deleted or moved.
+- **Safe renumbering mode:** Added an explicit renumbering toggle (`IN[1]`). When `True`, existing numbering notes are updated in-place starting from the chosen start number without creating duplicate notes. When `False` (safe mode), stalls with existing numbering notes are preserved.
+- **Protection of unrelated annotations:** Unrelated descriptive text (e.g. "RESERVED", "EV ONLY") is never matched as a parking label and is never modified, overwritten, or deleted.
 
 ### Changed
 
-- Summary now includes `SkippedExistingText` (count of skipped spaces) and `ExistingTextConflicts` (list of skipped parking IDs and conflicting note IDs). Output tuple remains `(created, errors, no_location, summary)`.
+- Added `IN[1]` (`Renumber existing labels`, boolean) to `ParkingNumbering.dyn` and `script.py`.
+- Summary now includes `TextNotesCreated`, `TextNotesUpdated`, `TotalNumbered`, `SkippedExistingText`, `ExistingTextConflicts`, `StartNumber`, and `RenumberExisting`.
+- Output tuple returns `(numbered_notes, errors, no_location, summary)`.
 - README updated with placement, duplicate prevention, and safe-handling guidance.
 
 ## [0.1.0] - 2026-10-29

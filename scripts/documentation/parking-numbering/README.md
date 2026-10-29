@@ -13,15 +13,14 @@ the active view. It groups the parking elements into rows, sorts each row from
 left to right, numbers the rows from top to bottom, and starts from a number you
 choose.
 
-The graph is a cleaned-up copy of the owner's `number_active_view_start_number`
-graph. The unused Boolean input was removed, the start-number input is now
-`IN[0]` and visible on the canvas, and the original file is retained in
-[`legacy/`](legacy/README.md) for reference only.
+The graph provides two visible input ports on the Dynamo canvas: **Start number** and **Renumber existing labels**.
 
-**v0.1.1 changes:** placement now uses transformed bounding-box corners for
-better centering on rotated/oriented parking spaces; existing text notes in the
-active view are scanned and parking spaces overlapping them are skipped
-(non-destructive, no deletions/moves).
+**v0.1.1 changes:**
+- **Geometric centering:** Uses transformed bounding-box corners for accurate centering on rotated/oriented parking spaces.
+- **Proximity-based label association:** Associates existing numbering notes within a 3.5 ft (~1.07 m) radius of each stall center, avoiding false-positive overlaps between adjacent angled parking bays.
+- **Sequential numbering without consumption:** Skipping existing spaces does not skip or advance numbers; newly assigned numbers remain strictly sequential.
+- **Safe renumbering mode:** Allows users to renumber existing parking labels starting from `01` (or a chosen start number) in-place without creating duplicate notes.
+- **Non-destructive:** Unrelated annotations (e.g. "RESERVED", "EV ONLY") are never deleted or modified.
 
 > **Test status:** this tool has not been run in a live Revit session. The graph
 > structure, all connectors, and the embedded Python were checked, but the
@@ -36,15 +35,19 @@ active view are scanned and parking spaces overlapping them are skipped
 - Sorts rows from top to bottom and each row from left to right.
 - Groups parking elements into rows using a fixed 1 foot (about 304.8 mm)
   vertical tolerance.
-- Starts numbering at any integer supplied through the graph.
+- Starts numbering at any integer supplied through the graph (`IN[0]`, default `1`).
+- Supports explicit renumbering (`IN[1]`): updates existing numbering notes
+  in-place without creating duplicate text notes.
+- In safe mode (`IN[1] = False`), skips stalls with existing numbering notes
+  without advancing the sequential counter.
 - Formats numbers with at least two digits: `01`, `02`, ..., `99`, `100`.
 - Creates centered, horizontal text notes using the project's default text note
   type.
 - Sets the text size to 150 mm when the size parameter is writable.
-- Scans existing text notes in the active view before creation; skips parking
-  spaces overlapping existing text (non-destructive; never deletes/moves).
-- Returns created notes, errors/skipped records, parking without a usable
-  center, and a summary dictionary.
+- Distinguishes numbering labels from unrelated text (e.g. "RESERVED", "EV ONLY").
+  Unrelated annotations are never overwritten or deleted.
+- Returns numbered notes, errors, parking without a usable center, and a summary
+  dictionary.
 - Skips parking elements without a usable bounding box/center instead of stopping
   the whole run.
 - No Dynamo packages or external Python packages are required.
@@ -133,23 +136,21 @@ the top of [`script.py`](script.py) if the project requires another size.
 
 ## Inputs and Outputs
 
-The cleaned graph has exactly one input port.
+The graph exposes two configurable inputs on the canvas:
 
 | Port | Input | Type | Graph default | Description |
 | --- | --- | --- | --- | --- |
-| `IN[0]` | Start number | number | `1` | First number in the sequence. It is rounded to the nearest integer. A missing or non-numeric value falls back to `1`. |
-
-The original graph used a second port (`IN[1]`) and an unused Boolean node. Both
-were removed in the maintained version; see [`legacy/`](legacy/README.md).
+| `IN[0]` | Start number | number | `1` | First number in the sequence. Rounded to the nearest integer. Falls back to `1` if invalid. |
+| `IN[1]` | Renumber existing labels | boolean | `False` | When `False` (safe mode), stalls with existing numbering notes are skipped without consuming sequence numbers. When `True` (renumber mode), existing numbering notes are updated in-place starting from the chosen Start number. |
 
 | Output | Type | Description |
 | --- | --- | --- |
-| `OUT[0]` | list of dictionaries | One record for each created text note: `ParkingId`, `Number`, `TextNoteId`, `X`, `Y`. |
-| `OUT[1]` | list of dictionaries | Per-element errors encountered during creation. |
+| `OUT[0]` | list of dictionaries | Records for each numbered stall (`ParkingId`, `Number`, `TextNoteId`, `X`, `Y`, `Action`). |
+| `OUT[1]` | list of dictionaries | Per-element errors encountered during placement or update. |
 | `OUT[2]` | list of integers | Parking element IDs that had no usable center in the active view. |
-| `OUT[3]` | dictionary | Summary with `ParkingFound`, `ParkingWithLocation`, `RowsDetected`, `TextNotesCreated`, `SkippedExistingText`, `ExistingTextConflicts`, `NoLocation`, `Errors`, `ActiveView`. |
+| `OUT[3]` | dictionary | Summary containing `ParkingFound`, `ParkingWithLocation`, `RowsDetected`, `TextNotesCreated`, `TextNotesUpdated`, `TotalNumbered`, `SkippedExistingText`, `ExistingTextConflicts`, `NoLocation`, `Errors`, `ActiveView`, `StartNumber`, `RenumberExisting`. |
 
-`X` and `Y` in the created-note records are Revit internal units (feet), not
+`X` and `Y` in the note records are Revit internal units (feet), not
 millimetres. The text-note position itself is correct in the view.
 
 The Watch node displays the four-item output tuple. Expand it to inspect the
@@ -157,18 +158,21 @@ summary and the error lists.
 
 ## Warnings and Limitations
 
-- **Not tested in Revit.** The graph was validated structurally, not by running
-  it against a real model. Test on a copy and inspect the notes.
+- **Not tested in a live Revit session.** The graph was validated structurally
+  and via automated tests; verify on a model copy before production use.
 - **Text notes are annotations, not parking parameters.** The tool does not
   write a number into the parking element's properties and does not create
   Revit tags.
-- **Non-destructive by default.** Existing text notes in the active view are
-  scanned before creation. Parking spaces overlapping existing text are skipped
-  (reported in `SkippedExistingText`/conflicts). No existing annotations are
-  deleted or moved. The tool does **not** assume unrelated text belongs to it.
-- **Re-running the graph.** Previously created notes from this tool may be
-  detected as potential conflicts by proximity+numeric pattern in some cases and
-  skipped; always inspect results on a copy.
+- **Safe mode vs Renumber mode:**
+  - With `IN[1] = False`, stalls containing existing numbering labels are skipped
+    safely. The sequential counter does not advance for skipped stalls.
+  - With `IN[1] = True`, existing numbering notes are updated in-place without
+    creating duplicates.
+- **Unrelated annotations are protected:** Notes containing non-numbering text
+  (e.g. "RESERVED", "EV ONLY") are never modified, overwritten, or deleted.
+- **Angled stalls:** Notes are associated with stalls using a 3.5 ft (~1.07 m)
+  proximity radius around each stall's geometric center. Adjacent angled stalls
+  (spaced >= 7.5 ft) do not cross-match.
 - **The notes do not follow the parking elements.** They are independent text
   notes. Moving or deleting a parking element does not move or delete its note.
 - **Row detection is fixed.** Rows are grouped with a 1 foot tolerance
